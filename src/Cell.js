@@ -26,7 +26,7 @@ function Cell(props) {
   let strokeWidth = 1;
   let strokeOpacity = 0.15;
 
-  if (props.hex.x === Math.round(props.grid.cellColumns / 2) && props.hex.y === Math.round((props.grid.cellRows - 1) / 2)) {
+  if (props.hex.x + 1 === Math.round(props.grid.cellColumns / 2) && props.hex.y + 1 === Math.round(props.grid.cellRows / 2)) {
     strokeWidth = 10;
     strokeOpacity = 1;
   }
