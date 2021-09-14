@@ -35,7 +35,7 @@ function getGridForScreen() {
   
   // Calculate the correct number of columns and rows using flat-topped coordinates:
   // https://www.redblobgames.com/grids/hexagons/#basics
-  // Cell columns: the screen width / 0.75 cell width, plus one for overlap
+  // Cell columns: the screen width / 0.75 cell width, plus two for overlap
   // Cell rows: the screen height / cell height, plus two for the top and bottom edges
   const cellHeight = size * Math.sqrt(3);
   const cellWidth = size * 2;
@@ -213,26 +213,11 @@ class App extends React.Component {
       })
       .join(' ');
 
-    // // Determine the range of the cubic coordinates to use
-    // const minExtents = this.state.gridParams.hexFactory().toCube({
-    //   x: this.state.gridParams.cellColumns,
-    //   y: 0
-    // })
-
-    // const maxExtents = this.state.gridParams.hexFactory().toCube({
-    //   x: 0,
-    //   y: this.state.gridParams.cellRows
-    // });
-
-    // console.debug('extents', minExtents, maxExtents);
-
     // Map each cell to a discrete component.
     const cellElements = this.state.cells.map((hex) => {
       return <Cell
         key={hexToKey(hex)}
         points={pointString}
-        // minExtents={minExtents}
-        // maxExtents={maxExtents}
         hex={hex}
         color={this.state.color}
         grid={this.state.gridParams}
