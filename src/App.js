@@ -117,39 +117,13 @@ class App extends React.Component {
   }
 
   handleKey(event) {
-    // Numpad up/down and arrow up/down control hue
-    // Numpad left/right and arrow left/right control saturation
+    // Numpad left/right and arrow left/right control hue
+    // Numpad up/down and arrow up/down control saturation    
     // Plus and minus control luminance
 
     switch(event.code) {
       case 'Numpad8':
       case 'ArrowUp':
-        this.setState(prevState => {
-          return {
-            color: {
-              hue: (prevState.color.hue + 1) % 360,
-              saturation: prevState.color.saturation,
-              lightness: prevState.color.lightness
-            }
-          };
-        });
-        break;
-
-      case 'Numpad2':
-      case 'ArrowDown':
-        this.setState(prevState => {
-          return {
-            color: {
-              hue: (prevState.color.hue - 1) % 360,
-              saturation: prevState.color.saturation,
-              lightness: prevState.color.lightness
-            }
-          };
-        });
-        break;
-
-      case 'Numpad6':
-      case 'ArrowRight':
         this.setState(prevState => {
           return {
             color: {
@@ -161,13 +135,39 @@ class App extends React.Component {
         });
         break;
 
-      case 'Numpad4':
-      case 'ArrowLeft':
+      case 'Numpad2':
+      case 'ArrowDown':
         this.setState(prevState => {
           return {
             color: {
               hue: prevState.color.hue,
               saturation: clampPercentage(prevState.color.saturation - 1),
+              lightness: prevState.color.lightness
+            }
+          };
+        });
+        break;
+
+      case 'Numpad6':
+      case 'ArrowRight':
+        this.setState(prevState => {
+          return {
+            color: {
+              hue: (prevState.color.hue + 1) % 360,
+              saturation: prevState.color.saturation,
+              lightness: prevState.color.lightness
+            }
+          };
+        });
+        break;
+
+      case 'Numpad4':
+      case 'ArrowLeft':
+        this.setState(prevState => {
+          return {
+            color: {
+              hue: (prevState.color.hue - 1) % 360,
+              saturation: prevState.color.saturation,
               lightness: prevState.color.lightness
             }
           };
