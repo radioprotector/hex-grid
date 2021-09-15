@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Hex } from 'honeycomb-grid';
 
 import colorReducer from './state/colorSlice';
-import hexGridReducer from './state/hexGridSlice';
+import hexGridReducer, { Size } from './state/hexGridSlice';
 
 const store = configureStore({
   reducer: {
@@ -22,36 +22,36 @@ function scaleNumericValue(fromValue: number, fromRange: [number, number], toRan
   return Math.round(scalingFactor * valueInRange + toRange[0]);
 }
 
-export const selectIsCenter = (state: RootState, hex: Hex<any>): boolean => {
-  return hex.x === state.hexGrid.centerCoord.x
-    && hex.y === state.hexGrid.centerCoord.y;
+export const selectIsCenter = (centerHex: Hex<any>, hex: Hex<any>): boolean => {
+  return hex.x === centerHex.x
+    && hex.y === centerHex.y;
 };
 
-export const selectScaledHue = (state: RootState, hex: Hex<any>): number => {
+export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<any>): number => {
   // Q = 0 to the maximum number of columns
   return scaleNumericValue(
     hex.q,
-    [0, state.hexGrid.grid.width],
-    [state.color.hue - 36, state.color.hue + 36]);
+    [0, gridDimensions.width],
+    [baseHue - 36, baseHue + 36]);
 };
 
-export const selectScaledSaturation = (state: RootState, hex: Hex<any>): number => {
+export const selectScaledSaturation = (baseSaturation: number, gridDimensions: Size, hex: Hex<any>): number => {
   // S = negative number of rows to positive number of rows
   const percentage = scaleNumericValue(
     hex.s,
-    [-state.hexGrid.grid.height, state.hexGrid.grid.height],
-    [state.color.saturation - 10, state.color.saturation + 10]);
+    [-gridDimensions.height, gridDimensions.height],
+    [baseSaturation - 10, baseSaturation + 10]);
 
   return Math.max(0, Math.min(100, percentage));
 };
 
-export const selectScaledLightness = (state: RootState, hex: Hex<any>): number => {
+export const selectScaledLightness = (baseLightness: number, gridDimensions: Size, hex: Hex<any>): number => {
   // R = negative number of rows to positive number of rows
   // Map this in reverse
   const percentage = scaleNumericValue(
     hex.r,
-    [-state.hexGrid.grid.height, state.hexGrid.grid.height],
-    [state.color.lightness + 10, state.color.lightness - 10]);
+    [-gridDimensions.height, gridDimensions.height],
+    [baseLightness + 10, baseLightness - 10]);
 
   return Math.max(0, Math.min(100, percentage));
 };
