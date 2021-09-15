@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { defineGrid, extendHex, Grid, GridFactory, Hex, HexFactory, PointLike } from "honeycomb-grid";
+import { defineGrid, extendHex, HexFactory, PointLike } from "honeycomb-grid";
 
 /**
  * THe arguments used to customize the hex factory and propagated throughout the stack.
