@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 
 import { selectScaledHue, selectScaledSaturation, selectScaledLightness, selectIsCenter } from './store';
 
-
 class Cell extends React.Component {
   render() {
     const scaledHue = selectScaledHue(this.props.baseHue, this.props.gridDimensions, this.props.hex);
