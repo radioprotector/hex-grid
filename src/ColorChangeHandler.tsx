@@ -1,15 +1,9 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 
 import { RootState } from './store';
 
-interface ColorProps {
-  baseHue: number,
-  baseSaturation: number,
-  baseLightness: number
-}
-
-class ColorChangeHandler extends React.Component<ColorProps> {
+class ColorChangeHandler extends React.Component<PropsFromRedux> {
   render() {
     const colorString = `hsl(${this.props.baseHue}, ${this.props.baseSaturation}%, ${this.props.baseLightness}%)`;
 
@@ -46,13 +40,13 @@ class ColorChangeHandler extends React.Component<ColorProps> {
   }
 }
 
-function mapStateToProps(state: RootState): ColorProps {
-  return {
-    baseHue: state.color.hue,
-    baseSaturation: state.color.saturation,
-    baseLightness: state.color.lightness,
-  }
-}
+const mapStateToProps = (state: RootState) => ({
+  baseHue: state.color.hue,
+  baseSaturation: state.color.saturation,
+  baseLightness: state.color.lightness,
+});
 
-export default connect(mapStateToProps, null)(ColorChangeHandler);
-
+// HACK: We don't need dispatch here but passing mapDispatchToProps=null will break the typings generation
+const connector = connect(mapStateToProps);
+type PropsFromRedux = ConnectedProps<typeof connector>
+export default connector(ColorChangeHandler);
