@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { Hex } from 'honeycomb-grid';
+import { Hex, PointLike } from 'honeycomb-grid';
 
 import colorReducer from './state/colorSlice';
 import hexGridReducer, { Size } from './state/hexGridSlice';
@@ -22,7 +22,7 @@ function scaleNumericValue(fromValue: number, fromRange: [number, number], toRan
   return Math.round(scalingFactor * valueInRange + toRange[0]);
 }
 
-export const selectIsCenter = (centerHex: Hex<any>, hex: Hex<any>): boolean => {
+export const selectIsCenter = (centerHex: PointLike, hex: Hex<any>): boolean => {
   return hex.x === centerHex.x
     && hex.y === centerHex.y;
 };
