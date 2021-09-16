@@ -1,16 +1,18 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 
-import Cell from './Cell';
+import { Hex } from 'honeycomb-grid';
+import { RootState } from './store';
 import { selectGridHexes } from './state/hexGridSlice';
+import Cell from './Cell';
 
-function hexToKey(hex) {
+function hexToKey(hex: Hex<any>) {
   // Use the QRS cubic coordinates to map this
   return `${hex.q}~${hex.r}~${hex.s}`;
 }
 
-class App extends React.Component {
-  constructor(props) {
+class App extends React.Component<PropsFromRedux> {
+  constructor(props: PropsFromRedux) {
     super(props);
 
     // Proxy event handlers
@@ -18,21 +20,21 @@ class App extends React.Component {
     this.handleKey = this.handleKey.bind(this);
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     window.addEventListener('resize', this.handleResize);
     window.addEventListener('keydown', this.handleKey);
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     window.removeEventListener('resize', this.handleResize);
     window.removeEventListener('keydown', this.handleKey);
   }
 
-  handleResize() {
+  handleResize(): void {
     this.props.dispatch({ type: 'hexGrid/resize' });
   }
 
-  handleKey(event) {
+  handleKey(event: KeyboardEvent): void {
     // Numpad left/right and arrow left/right control hue
     // Numpad up/down and arrow up/down control saturation    
     // Plus and minus control luminance
@@ -98,13 +100,13 @@ class App extends React.Component {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    screenDimensions: state.hexGrid.screenDimensions,
-    gridDimensions: state.hexGrid.gridDimensions,
-    cellDimensions: state.hexGrid.cellDimensions,
-    baseHexSize: state.hexGrid.baseHexSize
-  }
-}
+const mapStateToProps = (state: RootState) => ({
+  screenDimensions: state.hexGrid.screenDimensions,
+  gridDimensions: state.hexGrid.gridDimensions,
+  cellDimensions: state.hexGrid.cellDimensions,
+  baseHexSize: state.hexGrid.baseHexSize
+});
 
-export default connect(mapStateToProps)(App);
+const connector = connect(mapStateToProps);
+type PropsFromRedux = ConnectedProps<typeof connector>
+export default connector(App);
