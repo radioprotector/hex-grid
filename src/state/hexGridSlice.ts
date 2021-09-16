@@ -94,7 +94,7 @@ function getStateForScreen(): HexGridState {
     centerCoord
   }
 
-  console.debug(`Calculated grid dimensions`, state.screenDimensions, state.gridDimensions, state.cellDimensions);
+  console.debug(`Calculated dimensions`, { screen: state.screenDimensions, grid: state.gridDimensions, cell: state.cellDimensions });
   return state;
 }
 
