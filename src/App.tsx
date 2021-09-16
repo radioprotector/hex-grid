@@ -6,7 +6,12 @@ import { RootState } from './store';
 import { selectGridHexes } from './state/hexGridSlice';
 import Cell from './Cell';
 
-function hexToKey(hex: Hex<any>) {
+/**
+ * Generates a key for the provided hex element.
+ * @param hex The hex element.
+ * @returns The key for the hex.
+ */
+function hexToKey(hex: Hex<any>): string {
   // Use the QRS cubic coordinates to map this
   return `${hex.q}~${hex.r}~${hex.s}`;
 }

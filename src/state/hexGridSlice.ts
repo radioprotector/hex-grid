@@ -118,6 +118,12 @@ export const hexGridSlice = createSlice({
 export const { resize } = hexGridSlice.actions;
 export default hexGridSlice.reducer;
 
+/**
+ * Generates a hex grid using the specified dimensions and size of each hex.
+ * @param gridDimensions The grid dimensions to use.
+ * @param baseHexSize The base size, in pixels, of each hexagon.
+ * @returns A hex grid. The "center" hex element will be the last item in the collection.
+ */
 export const selectGridHexes = (gridDimensions: Size, baseHexSize: number) => {
   // Construct the hex/grid factories
   const hexFactory = extendHex({

@@ -15,18 +15,38 @@ export default store;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// Scale JS value https://gist.github.com/fpillet/993002
+/**
+ * Scales a numeric value from one range to another.
+ * @param fromValue The source value to scale.
+ * @param fromRange The minimum/maximum expected range of the source value.
+ * @param toRange The minimum/maximum range of the destination value.
+ * @returns The resulting scaled value.
+ */
 function scaleNumericValue(fromValue: number, fromRange: [number, number], toRange: [number, number]): number {
+  // Scale JS value https://gist.github.com/fpillet/993002
   const scalingFactor = (fromRange[1] - fromRange[0]) / (toRange[1] - toRange[0]);
   const valueInRange = Math.min(fromRange[1], Math.max(fromRange[0], fromValue)) - fromRange[0];
   return Math.round(scalingFactor * valueInRange + toRange[0]);
 }
 
+/**
+ * Determines whether the specified hex refers to the hex at the center.
+ * @param centerHex The center hex.
+ * @param hex The hex to check.
+ * @returns True if the two refer to the same coordinates; otherwise, false.
+ */
 export const selectIsCenter = (centerHex: PointLike, hex: Hex<any>): boolean => {
   return hex.x === centerHex.x
     && hex.y === centerHex.y;
 };
 
+/**
+ * Determines a scaled hue value based on the provided hex position relative to the entire grid.
+ * @param baseHue The base hue value to scale.
+ * @param gridDimensions The maximum extent of the grid.
+ * @param hex The hex coordinates to use for scaling the color.
+ * @returns A scaled hue value.
+ */
 export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<any>): number => {
   // Q = 0 to the maximum number of columns
   return scaleNumericValue(
@@ -35,6 +55,13 @@ export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<
     [baseHue - 36, baseHue + 36]);
 };
 
+/**
+ * Determines a scaled saturation value based on the provided hex position relative to the entire grid.
+ * @param baseSaturation The base saturation value to scale.
+ * @param gridDimensions The maximum extent of the grid.
+ * @param hex The hex coordinates to use for scaling the color.
+ * @returns A scaled saturation value.
+ */
 export const selectScaledSaturation = (baseSaturation: number, gridDimensions: Size, hex: Hex<any>): number => {
   // S = negative number of rows to positive number of rows
   const percentage = scaleNumericValue(
@@ -45,6 +72,13 @@ export const selectScaledSaturation = (baseSaturation: number, gridDimensions: S
   return Math.max(0, Math.min(100, percentage));
 };
 
+/**
+ * Determines a scaled lightness value based on the provided hex position relative to the entire grid.
+ * @param baseLightness The base lightness value to scale.
+ * @param gridDimensions The maximum extent of the grid.
+ * @param hex The hex coordinates to use for scaling the color.
+ * @returns A scaled lightness value.
+ */
 export const selectScaledLightness = (baseLightness: number, gridDimensions: Size, hex: Hex<any>): number => {
   // R = negative number of rows to positive number of rows
   // Map this in reverse

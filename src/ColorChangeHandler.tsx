@@ -15,9 +15,11 @@ class ColorChangeHandler extends React.Component<PropsFromRedux> {
     canvasElem.setAttribute('width', '64px');
     canvasElem.setAttribute('height', '64px');
 
+    // Try to get a 2D rendering context
     const ctx = canvasElem.getContext('2d', { alpha: true, desynchronized: true });
     
     if (ctx) {
+      // Draw a hexagon with the color
       const region = new Path2D();
       region.moveTo(16, 8);
       region.lineTo(48, 8);
@@ -30,6 +32,7 @@ class ColorChangeHandler extends React.Component<PropsFromRedux> {
       ctx.fillStyle = colorString;
       ctx.fill(region);
 
+      // Convert to a data URL and use it to generate the favicon
       const iconUrl = canvasElem.toDataURL('image/png');
       document.querySelector('link[rel="icon"]')?.setAttribute('href', iconUrl);
     }
