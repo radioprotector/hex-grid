@@ -1,6 +1,8 @@
 .dragGuide {
   position: fixed;
   z-index: 10;
+  top: 50vh;
+  left: 50vw;
 }
 
 .dragGuide svg {
