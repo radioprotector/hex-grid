@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "./hooks";
 import './App.css';
 import Grid from './Grid';
 import ColorChangeHandler from './ColorChangeHandler';
+import DragGuideIcon from "./DragGuideIcon";
 
 function App(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -88,6 +89,9 @@ function App(): JSX.Element {
       }
   
       // Switch based on whether this is a touch or mouse event
+      let currentClientX: number;
+      let currentClientY: number;
+
       if (event.type === 'touchstart') {
         const touchEvent = event as TouchEvent;
   
@@ -96,20 +100,25 @@ function App(): JSX.Element {
           return;
         }
   
-        setIsPanning(true);
-        lastPannedClientX.current = touchEvent.touches[0].clientX;
-        lastPannedClientY.current = touchEvent.touches[0].clientY;
+        currentClientX = touchEvent.touches[0].clientX;
+        currentClientY = touchEvent.touches[0].clientY;
       }
       else if (event.type === 'mousedown') {
         const mouseEvent = event as MouseEvent;
   
-        setIsPanning(true);
-        lastPannedClientX.current = mouseEvent.clientX;
-        lastPannedClientY.current = mouseEvent.clientY;
+        currentClientX = mouseEvent.clientX;
+        currentClientY = mouseEvent.clientY;
       }
+      else {
+        return;
+      }
+
+      setIsPanning(true);
+      lastPannedClientX.current = currentClientX;
+      lastPannedClientY.current = currentClientY;
   
       if (isPanning) {
-        console.log(`pan start: (${lastPannedClientX.current}, ${lastPannedClientY.current})`);
+        console.log(`pan start: (${currentClientX}, ${currentClientY})`);
       }
     }
 
@@ -247,43 +256,13 @@ function App(): JSX.Element {
     >
       <div
         className="dragGuide"
-        style={{'display': isPanning ? 'block' : 'none', 'top': lastPannedClientY.current - 128, 'left': lastPannedClientX.current - 128}}
+        style={{
+          'display': isPanning ? 'block' : 'none',
+          'top': lastPannedClientY.current - 128,
+          'left': lastPannedClientX.current - 128
+        }}
       >
-        <svg
-          viewBox="0 0 512 512"
-        >
-          <path
-            d="M140.554,342.052L156.154,369.072L90.585,351.503L108.154,285.933L123.754,312.953L373.169,168.953L357.569,141.933L423.138,159.503L405.569,225.072L389.969,198.052L140.554,342.052Z"
-            fill="url(#_Lightness)"
-          />
-          <path
-            d="M239.2,112L208,112L256,64L304,112L272.8,112L272.8,400L304,400L256,448L208,400L239.2,400L239.2,112Z"
-            fill="url(#_Saturation)"
-          />
-          <path
-            d="M126.108,200.406L110.508,227.426L92.939,161.856L158.508,144.287L142.908,171.307L392.323,315.307L407.923,288.287L425.492,353.856L359.923,371.426L375.523,344.406L126.108,200.406Z"
-            fill="url(#_Hue)"
-          />
-          <defs>
-            <linearGradient id="_Lightness" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(-30 0.5 0.5)">
-              <stop offset="0" style={{"stopColor": "hsl(180,50%,0%)"}}/>
-              <stop offset="0.5" style={{"stopColor": "hsl(180,50%,50%)"}}/>
-              <stop offset="1" style={{"stopColor": "hsl(180,50%,100%)"}}/>
-            </linearGradient>
-            <linearGradient id="_Hue" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(30 0.5 0.5)">
-              <stop offset="0" style={{"stopColor": "hsl(0,70%,50%)"}}/>
-              <stop offset="0.25" style={{"stopColor": "hsl(90,70%,50%)"}}/>
-              <stop offset="0.5" style={{"stopColor": "hsl(180,70%,50%)"}}/>
-              <stop offset="0.75" style={{"stopColor": "hsl(270,70%,50%)"}}/>
-              <stop offset="1" style={{"stopColor": "hsl(360,70%,50%)"}}/>
-            </linearGradient>
-            <linearGradient id="_Saturation" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(-90 0.5 0.5)">
-              <stop offset="0" style={{"stopColor": "hsl(180,0%,50%)"}}/>
-              <stop offset="0.5" style={{"stopColor": "hsl(180,50%,50%)"}}/>
-              <stop offset="1" style={{"stopColor": "hsl(180,100%,50%)"}}/>
-            </linearGradient>
-          </defs>
-        </svg>
+        <DragGuideIcon />
       </div>
       <Grid />
       <ColorChangeHandler />
