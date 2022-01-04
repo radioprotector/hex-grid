@@ -167,7 +167,7 @@ function App(): JSX.Element {
   
       // Determine the distance between the click and our "last panned" value.
       // If it's larger than our base hex size, we want to shift one of the colors
-      const scaleFactor = 6;
+      const scaleFactor = 5;
       const distanceX = currentClientX - lastPannedClientX.current;
       const distanceY = currentClientY - lastPannedClientY.current;
       const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
@@ -194,8 +194,8 @@ function App(): JSX.Element {
           dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
         }
         else if (angle <= 180) {
-          // Left and up - adjust hue
-          dispatch({ type: 'color/adjustHue', payload: scaleFactor });
+          // Left and up - adjust hue (but double the scaling factor since hue is a larger range than the percentages)
+          dispatch({ type: 'color/adjustHue', payload: scaleFactor * 2 });
         }
         else if (angle <= 240) {
           // Left and down - adjust lightness
@@ -206,8 +206,8 @@ function App(): JSX.Element {
           dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
         }
         else {
-          // Right and down - adjust hue
-          dispatch({ type: 'color/adjustHue', payload: -scaleFactor });
+          // Right and down - adjust hue (but double the scaling factor since hue is a larger range than the percentages)
+          dispatch({ type: 'color/adjustHue', payload: -scaleFactor * 2 });
         }
   
         // Update our "last panned" value
