@@ -61,7 +61,7 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
         x="60"
         y="60"
       >
-        {this.props.hex.q}, {this.props.hex.r}, {this.props.hex.s}
+        {props.hex.q}, {props.hex.r}, {props.hex.s}
       </text> */}
     </g> 
   );
