@@ -52,7 +52,7 @@ export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<
   return scaleNumericValue(
     hex.q,
     [0, gridDimensions.width],
-    [baseHue - 36, baseHue + 36]);
+    [baseHue - 72, baseHue + 72]);
 };
 
 /**
@@ -67,7 +67,7 @@ export const selectScaledSaturation = (baseSaturation: number, gridDimensions: S
   const percentage = scaleNumericValue(
     hex.s,
     [-gridDimensions.height, gridDimensions.height],
-    [baseSaturation - 10, baseSaturation + 10]);
+    [baseSaturation - 15, baseSaturation + 15]);
 
   return Math.max(0, Math.min(100, percentage));
 };
@@ -85,7 +85,7 @@ export const selectScaledLightness = (baseLightness: number, gridDimensions: Siz
   const percentage = scaleNumericValue(
     hex.r,
     [-gridDimensions.height, gridDimensions.height],
-    [baseLightness + 10, baseLightness - 10]);
+    [baseLightness + 15, baseLightness - 15]);
 
   return Math.max(0, Math.min(100, percentage));
 };
