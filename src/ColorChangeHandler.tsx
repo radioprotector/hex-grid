@@ -1,11 +1,14 @@
-import React from 'react';
-import { connect, ConnectedProps } from 'react-redux';
+import { useEffect } from 'react';
+import { useAppSelector } from './hooks';
 
-import { RootState } from './store';
+function ColorChangeHandler(): null {
+  const mainHue = useAppSelector((state) => state.color.hue);
+  const mainSaturation = useAppSelector((state) => state.color.saturation);
+  const mainLightness = useAppSelector((state) => state.color.lightness);
 
-class ColorChangeHandler extends React.Component<PropsFromRedux> {
-  render() {
-    const colorString = `hsl(${this.props.baseHue}, ${this.props.baseSaturation}%, ${this.props.baseLightness}%)`;
+  useEffect(() => {
+    // Convert the color into the equivalent HSL CSS declaration
+    const colorString = `hsl(${mainHue}, ${mainSaturation}%, ${mainLightness}%)`;
 
     // Update the theme-color meta tag to match our main color
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colorString);
@@ -38,18 +41,9 @@ class ColorChangeHandler extends React.Component<PropsFromRedux> {
     }
 
     canvasElem.remove();
+  }, [mainHue, mainSaturation, mainLightness]);
 
-    return null;
-  }
+  return null;
 }
 
-const mapStateToProps = (state: RootState) => ({
-  baseHue: state.color.hue,
-  baseSaturation: state.color.saturation,
-  baseLightness: state.color.lightness,
-});
-
-// HACK: We don't need dispatch here but passing mapDispatchToProps=null will break the typings generation
-const connector = connect(mapStateToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>
-export default connector(ColorChangeHandler);
+export default ColorChangeHandler;
