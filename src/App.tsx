@@ -1,254 +1,294 @@
-import React from 'react';
-import { connect, ConnectedProps } from 'react-redux';
+import { useState, useEffect, useRef } from "react";
+import { useAppDispatch, useAppSelector } from "./hooks";
 
-import { RootState } from './store';
+import './App.css';
 import Grid from './Grid';
 import ColorChangeHandler from './ColorChangeHandler';
 
-class App extends React.Component<PropsFromRedux> {
+function App(): JSX.Element {
+  const dispatch = useAppDispatch();
+  const baseHexSize = useAppSelector((state) => state.hexGrid.baseHexSize);
+  const [isPanning, setIsPanning] = useState(false);
+  const lastPannedClientX = useRef(0);
+  const lastPannedClientY = useRef(0);
 
-  /**
-   * Tracks whether or not the application is currently panning.
-   */
-  private isPanning: boolean = false;
+  // Ensure that we resize the grid when the window resizes
+  useEffect(() => {
+    const handleResize = (): void => {
+      setIsPanning(false);
+      dispatch({ type: 'hexGrid/resize' });
+    };
 
-  /**
-   * The x-coordinate at which panning was last applied.
-   */
-  private lastPannedClientX: number = 0;
+    window.addEventListener('resize', handleResize);
 
-  /**
-   * The y-coordinate at which panning was last applied.
-   */
-  private lastPannedClientY: number = 0;
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    };
+  }, [dispatch]);
+  
+  // Listen to keyboard events to scale color values
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent): void => {
+      // Numpad left/right and arrow left/right control hue
+      // Numpad up/down and arrow up/down control saturation    
+      // Plus and minus control luminance
+      const scaleFactor = 1;
+  
+      switch(event.code) {
+        case 'Numpad8':
+        case 'ArrowUp':
+          dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
+          break;
+  
+        case 'Numpad2':
+        case 'ArrowDown':
+          dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
+          break;
+  
+        case 'Numpad6':
+        case 'ArrowRight':
+          dispatch({ type: 'color/adjustHue', payload: scaleFactor });
+          break;
+  
+        case 'Numpad4':
+        case 'ArrowLeft':
+          dispatch({ type: 'color/adjustHue', payload: -scaleFactor });
+          break;
+  
+        case 'NumpadAdd':
+        case 'Equal':
+          dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
+          break;
+  
+        case 'NumpadSubtract':
+        case 'Minus':
+          dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
+          break;
+  
+        default:
+          // no-op
+      }
+    };
 
-  constructor(props: PropsFromRedux) {
-    super(props);
+    window.addEventListener('keydown', handleKey);
 
-    // Proxy event handlers
-    this.handleResize = this.handleResize.bind(this);
-    this.handleKey = this.handleKey.bind(this);
-    this.handlePanStart = this.handlePanStart.bind(this);
-    this.handlePanMove = this.handlePanMove.bind(this);
-    this.handlePanEnd = this.handlePanEnd.bind(this);
-  }
-
-  componentDidMount(): void {
-    window.addEventListener('resize', this.handleResize);
-    window.addEventListener('keydown', this.handleKey);
-
-    // Handle both touch/mouse events for panning
-    window.addEventListener('touchstart', this.handlePanStart);
-    window.addEventListener('mousedown', this.handlePanStart);
-
-    window.addEventListener('touchmove', this.handlePanMove);
-    window.addEventListener('mousemove', this.handlePanMove);
-
-    window.addEventListener('touchend', this.handlePanEnd);
-    window.addEventListener('touchcancel', this.handlePanEnd);
-    window.addEventListener('mouseup', this.handlePanEnd);
-  }
-
-  componentWillUnmount(): void {
-    window.removeEventListener('resize', this.handleResize);
-    window.removeEventListener('keydown', this.handleKey);
-
-    // Handle both touch/mouse events for panning
-    window.removeEventListener('touchstart', this.handlePanStart);
-    window.removeEventListener('mousedown', this.handlePanStart);
-
-    window.removeEventListener('touchmove', this.handlePanMove);
-    window.removeEventListener('mousemove', this.handlePanMove);
-
-    window.removeEventListener('touchend', this.handlePanEnd);
-    window.removeEventListener('touchcancel', this.handlePanEnd);
-    window.removeEventListener('mouseup', this.handlePanEnd);
-  }
-
-  handleResize(): void {
-    this.isPanning = false;
-    this.props.dispatch({ type: 'hexGrid/resize' });
-  }
-
-  handleKey(event: KeyboardEvent): void {
-    // Numpad left/right and arrow left/right control hue
-    // Numpad up/down and arrow up/down control saturation    
-    // Plus and minus control luminance
-    const scaleFactor = 1;
-
-    switch(event.code) {
-      case 'Numpad8':
-      case 'ArrowUp':
-        this.props.dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
-        break;
-
-      case 'Numpad2':
-      case 'ArrowDown':
-        this.props.dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
-        break;
-
-      case 'Numpad6':
-      case 'ArrowRight':
-        this.props.dispatch({ type: 'color/adjustHue', payload: scaleFactor });
-        break;
-
-      case 'Numpad4':
-      case 'ArrowLeft':
-        this.props.dispatch({ type: 'color/adjustHue', payload: -scaleFactor });
-        break;
-
-      case 'NumpadAdd':
-      case 'Equal':
-        this.props.dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
-        break;
-
-      case 'NumpadSubtract':
-      case 'Minus':
-        this.props.dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
-        break;
-
-      default:
-        // no-op
+    return () => {
+      window.removeEventListener('keydown', handleKey)
     }
-  }
+  }, [dispatch]);
 
-  handlePanStart(event: TouchEvent | MouseEvent): void {
-    // Skip when we're already panning
-    if (this.isPanning) {
-      return;
-    }
-
-    // Switch based on whether this is a touch or mouse event
-    if (event.type === 'touchstart') {
-      const touchEvent = event as TouchEvent;
-
-      // Don't do anything with multi-touch
-      if (touchEvent.touches.length !== 1) {
+  // Listen to when we start panning and store the initial coordinates
+  // so we can get relative values
+  useEffect(() => {
+    const handlePanStart = (event: TouchEvent | MouseEvent): void => {
+      // Skip when we're already panning
+      // XXX: Investigate whether we can use this to prevent creating the event handler in the first place
+      if (isPanning) {
         return;
       }
-
-      this.isPanning = true;
-      this.lastPannedClientX = touchEvent.touches[0].clientX;
-      this.lastPannedClientY = touchEvent.touches[0].clientY;
+  
+      // Switch based on whether this is a touch or mouse event
+      if (event.type === 'touchstart') {
+        const touchEvent = event as TouchEvent;
+  
+        // Don't do anything with multi-touch
+        if (touchEvent.touches.length !== 1) {
+          return;
+        }
+  
+        setIsPanning(true);
+        lastPannedClientX.current = touchEvent.touches[0].clientX;
+        lastPannedClientY.current = touchEvent.touches[0].clientY;
+      }
+      else if (event.type === 'mousedown') {
+        const mouseEvent = event as MouseEvent;
+  
+        setIsPanning(true);
+        lastPannedClientX.current = mouseEvent.clientX;
+        lastPannedClientY.current = mouseEvent.clientY;
+      }
+  
+      if (isPanning) {
+        console.log(`pan start: (${lastPannedClientX.current}, ${lastPannedClientY.current})`);
+      }
     }
-    else if (event.type === 'mousedown') {
-      const mouseEvent = event as MouseEvent;
 
-      this.isPanning = true;
-      this.lastPannedClientX = mouseEvent.clientX;
-      this.lastPannedClientY = mouseEvent.clientY;
+    // Handle both touch/mouse events for panning
+    window.addEventListener('touchstart', handlePanStart);
+    window.addEventListener('mousedown', handlePanStart);
+
+    return () => {
+      window.removeEventListener('touchstart', handlePanStart);
+      window.removeEventListener('mousedown', handlePanStart);
     }
+  }, [dispatch, isPanning]);
 
-    if (this.isPanning) {
-      console.log(`pan start: (${this.lastPannedClientX}, ${this.lastPannedClientY})`);
-    }
-  }
-
-  handlePanMove(event: TouchEvent | MouseEvent): void {
-    // Make sure we're panning
-    if (!this.isPanning) {
-      return;
-    }
-
-    let currentClientX: number;
-    let currentClientY: number;
-
-    // Switch based on whether this is a touch or mouse event
-    if (event.type === 'touchmove') {
-      const touchEvent = event as TouchEvent;
-
-      // Don't do anything with multi-touch
-      if (touchEvent.touches.length !== 1) {
+  // Add an effect that will start to change colors as we drag far enough
+  useEffect(() => {
+    const handlePanMove = (event: TouchEvent | MouseEvent): void => {
+      // Make sure we're panning
+      // XXX: Investigate whether we can use this to prevent creating the event handler in the first place
+      if (!isPanning) {
         return;
       }
-
-      // Determine the "current" panning values to use
-      currentClientX = touchEvent.touches[0].clientX;
-      currentClientY = touchEvent.touches[0].clientY;
-    }
-    else if (event.type === 'mousemove') {
-      const mouseEvent = event as MouseEvent;
-      
-      currentClientX = mouseEvent.clientX;
-      currentClientY = mouseEvent.clientY;
-    }
-    else {
-      return;
-    }
-
-    // Determine the distance between the click and our "last panned" value.
-    // If it's larger than our base hex size, we want to shift one of the colors
-    const scaleFactor = 6;
-    const distanceX = currentClientX - this.lastPannedClientX;
-    const distanceY = currentClientY - this.lastPannedClientY;
-    const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
-
-    if (distanceTotal >= 2 * this.props.baseHexSize) {
-      // When calculating atan2, invert the y-distance because HTML coordinates are in reverse
-      const atan = Math.atan2(-distanceY / distanceTotal, distanceX / distanceTotal);
-      let angle = atan * 180 / Math.PI;
-
-      // Normalize the angle to 0-360 to simplify
-      if (angle < 0) {
-        angle += 360;
+  
+      let currentClientX: number;
+      let currentClientY: number;
+  
+      // Switch based on whether this is a touch or mouse event
+      if (event.type === 'touchmove') {
+        const touchEvent = event as TouchEvent;
+  
+        // Don't do anything with multi-touch
+        if (touchEvent.touches.length !== 1) {
+          return;
+        }
+  
+        // Determine the "current" panning values to use
+        currentClientX = touchEvent.touches[0].clientX;
+        currentClientY = touchEvent.touches[0].clientY;
       }
-
-      console.log(`pan threshold met (angle: ${angle})`);
-
-      // Now map the different axes (assuming 6 "chunks")
-      if (angle <= 60) {
-        // Right and up - adjust lightness
-        this.props.dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
-      }
-      else if (angle <= 120) {
-        // Straight up - adjust saturation downward
-        this.props.dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
-      }
-      else if (angle <= 180) {
-        // Left and up - adjust hue
-        this.props.dispatch({ type: 'color/adjustHue', payload: scaleFactor });
-      }
-      else if (angle <= 240) {
-        // Left and down - adjust lightness
-        this.props.dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
-      }
-      else if (angle <= 300) {
-        // Straight down - adjust saturation upward
-        this.props.dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
+      else if (event.type === 'mousemove') {
+        const mouseEvent = event as MouseEvent;
+        
+        currentClientX = mouseEvent.clientX;
+        currentClientY = mouseEvent.clientY;
       }
       else {
-        // Right and down - adjust hue
-        this.props.dispatch({ type: 'color/adjustHue', payload: -scaleFactor });
+        return;
       }
+  
+      // Determine the distance between the click and our "last panned" value.
+      // If it's larger than our base hex size, we want to shift one of the colors
+      const scaleFactor = 6;
+      const distanceX = currentClientX - lastPannedClientX.current;
+      const distanceY = currentClientY - lastPannedClientY.current;
+      const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+  
+      if (distanceTotal >= 2 * baseHexSize) {
+        // When calculating atan2, invert the y-distance because HTML coordinates are in reverse
+        const atan = Math.atan2(-distanceY / distanceTotal, distanceX / distanceTotal);
+        let angle = atan * 180 / Math.PI;
+  
+        // Normalize the angle to 0-360 to simplify
+        if (angle < 0) {
+          angle += 360;
+        }
+  
+        console.log(`pan threshold met (angle: ${angle})`);
+  
+        // Now map the different axes (assuming 6 "chunks")
+        if (angle <= 60) {
+          // Right and up - adjust lightness
+          dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
+        }
+        else if (angle <= 120) {
+          // Straight up - adjust saturation downward
+          dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
+        }
+        else if (angle <= 180) {
+          // Left and up - adjust hue
+          dispatch({ type: 'color/adjustHue', payload: scaleFactor });
+        }
+        else if (angle <= 240) {
+          // Left and down - adjust lightness
+          dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
+        }
+        else if (angle <= 300) {
+          // Straight down - adjust saturation upward
+          dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
+        }
+        else {
+          // Right and down - adjust hue
+          dispatch({ type: 'color/adjustHue', payload: -scaleFactor });
+        }
+  
+        // Update our "last panned" value
+        lastPannedClientX.current = currentClientX;
+        lastPannedClientY.current = currentClientY;
+      }
+    };
+    
+    // Handle both touch/mouse events for panning
+    window.addEventListener('touchmove', handlePanMove);
+    window.addEventListener('mousemove', handlePanMove);
 
-      // Update our "last panned" value
-      this.lastPannedClientX = currentClientX;
-      this.lastPannedClientY = currentClientY;
+    return () => {
+      window.removeEventListener('touchmove', handlePanMove);
+      window.removeEventListener('mousemove', handlePanMove);
     }
-  }
+  }, [dispatch, baseHexSize, isPanning]);
 
-  handlePanEnd(): void {
-    if (this.isPanning) {
-      console.log('pan end');
+  // Add an effect to handle when we want to stop panning
+  useEffect(() => {
+    const handlePanEnd = (): void => {
+      if (isPanning) {
+        console.log('pan end');
+      }
+  
+      setIsPanning(false);
+    };
+
+    // Handle both touch/mouse events for panning
+    window.addEventListener('touchend', handlePanEnd);
+    window.addEventListener('touchcancel', handlePanEnd);
+    window.addEventListener('mouseup', handlePanEnd);
+
+    return () => {
+      window.removeEventListener('touchend', handlePanEnd);
+      window.removeEventListener('touchcancel', handlePanEnd);
+      window.removeEventListener('mouseup', handlePanEnd);
     }
+  }, [isPanning]);
 
-    this.isPanning = false;
-  }
-
-  render() {
-    return (
-      <div>
-        <Grid />
-        <ColorChangeHandler />
+  return (
+    <div
+      style={{'cursor': isPanning ? 'grabbing' : 'grab'}}
+    >
+      <div
+        className="dragGuide"
+        style={{'display': isPanning ? 'block' : 'none', 'top': lastPannedClientY.current - 128, 'left': lastPannedClientX.current - 128}}
+      >
+        <svg
+          viewBox="0 0 512 512"
+        >
+          <path
+            d="M140.554,342.052L156.154,369.072L90.585,351.503L108.154,285.933L123.754,312.953L373.169,168.953L357.569,141.933L423.138,159.503L405.569,225.072L389.969,198.052L140.554,342.052Z"
+            fill="url(#_Lightness)"
+          />
+          <path
+            d="M239.2,112L208,112L256,64L304,112L272.8,112L272.8,400L304,400L256,448L208,400L239.2,400L239.2,112Z"
+            fill="url(#_Saturation)"
+          />
+          <path
+            d="M126.108,200.406L110.508,227.426L92.939,161.856L158.508,144.287L142.908,171.307L392.323,315.307L407.923,288.287L425.492,353.856L359.923,371.426L375.523,344.406L126.108,200.406Z"
+            fill="url(#_Hue)"
+          />
+          <defs>
+            <linearGradient id="_Lightness" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(-30 0.5 0.5)">
+              <stop offset="0" style={{"stopColor": "hsl(180,50%,0%)"}}/>
+              <stop offset="0.5" style={{"stopColor": "hsl(180,50%,50%)"}}/>
+              <stop offset="1" style={{"stopColor": "hsl(180,50%,100%)"}}/>
+            </linearGradient>
+            <linearGradient id="_Hue" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(30 0.5 0.5)">
+              <stop offset="0" style={{"stopColor": "hsl(0,70%,50%)"}}/>
+              <stop offset="0.25" style={{"stopColor": "hsl(90,70%,50%)"}}/>
+              <stop offset="0.5" style={{"stopColor": "hsl(180,70%,50%)"}}/>
+              <stop offset="0.75" style={{"stopColor": "hsl(270,70%,50%)"}}/>
+              <stop offset="1" style={{"stopColor": "hsl(360,70%,50%)"}}/>
+            </linearGradient>
+            <linearGradient id="_Saturation" x1="0" y1="0" x2="1" y2="0" gradientTransform="rotate(-90 0.5 0.5)">
+              <stop offset="0" style={{"stopColor": "hsl(180,0%,50%)"}}/>
+              <stop offset="0.5" style={{"stopColor": "hsl(180,50%,50%)"}}/>
+              <stop offset="1" style={{"stopColor": "hsl(180,100%,50%)"}}/>
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
-    );
-  }
+      <Grid />
+      <ColorChangeHandler />
+    </div>
+  );
 }
 
-const mapStateToProps = (state: RootState) => ({
-  baseHexSize: state.hexGrid.baseHexSize
-});
-
-const connector = connect(mapStateToProps);
-type PropsFromRedux = ConnectedProps<typeof connector>
-export default connector(App);
+export default App;

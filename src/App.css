@@ -1,0 +1,10 @@
+.dragGuide {
+  position: fixed;
+  z-index: 10;
+}
+
+.dragGuide svg {
+  height: 256px;
+  width: 256px;
+  opacity: 0.5;
+}
