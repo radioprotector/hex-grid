@@ -27,9 +27,9 @@ export interface HexGridState {
 /**
  * Gets a hex factory for the specified hex size.
  * @param baseHexSize The base hex size.
- * @returns THe corresponding hex factory.
+ * @returns The corresponding hex factory.
  */
-function getHexFactory(baseHexSize: number) {
+function getHexFactory(baseHexSize: number): HexFactory<HexArgs> {
   return extendHex({
     orientation: 'flat',
     size: baseHexSize,
