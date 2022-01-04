@@ -25,6 +25,19 @@ export interface HexGridState {
 }
 
 /**
+ * Gets a hex factory for the specified hex size.
+ * @param baseHexSize The base hex size.
+ * @returns THe corresponding hex factory.
+ */
+function getHexFactory(baseHexSize: number) {
+  return extendHex({
+    orientation: 'flat',
+    size: baseHexSize,
+    offset: -1
+  });
+}
+
+/**
  * Gets a string of points suitable for use in defining each SVG hexagon.
  */
 function getCornerPointsString(hexFactory: HexFactory<HexArgs>): string {
@@ -54,16 +67,12 @@ function getStateForScreen(): HexGridState {
   }
 
   // Construct a hex factory just so we can get the corner string
-  const hexFactory = extendHex({
-    orientation: 'flat',
-    size: baseHexSize,
-    offset: 1
-  });
+  const hexFactory = getHexFactory(baseHexSize);
   
   // Calculate the correct number of columns and rows using flat-topped coordinates:
   // https://www.redblobgames.com/grids/hexagons/#basics
-  // Cell columns: the screen width / 0.75 cell width, plus two for overlap
-  // Cell rows: the screen height / cell height, plus two for the top and bottom edges
+  // Cell columns: the screen width / 0.75 cell width, plus two for the right edge
+  // Cell rows: the screen height / cell height, plus two for the bottom edge
   const cellHeight = baseHexSize * Math.sqrt(3);
   const cellWidth = baseHexSize * 2;
   const cellColumns = Math.floor(screenWidth / (cellWidth * 0.75)) + 2;
@@ -119,18 +128,15 @@ export const { resize } = hexGridSlice.actions;
 export default hexGridSlice.reducer;
 
 /**
- * Generates a hex grid using the specified dimensions and size of each hex.
+ * Generates a hex grid using the specified dimensions, center hex coordinate, and size of each hex.
  * @param gridDimensions The grid dimensions to use.
+ * @param centerCoord The coordinate of the center hex element.
  * @param baseHexSize The base size, in pixels, of each hexagon.
  * @returns A hex grid. The "center" hex element will be the last item in the collection.
  */
-export const selectGridHexes = (gridDimensions: Size, baseHexSize: number) => {
+export const selectGridHexes = (gridDimensions: Size, centerCoord: PointLike, baseHexSize: number) => {
   // Construct the hex/grid factories
-  const hexFactory = extendHex({
-    orientation: 'flat',
-    size: baseHexSize,
-    offset: 1
-  });
+  const hexFactory = getHexFactory(baseHexSize);
 
   const gridFactory = defineGrid(hexFactory);
 
@@ -141,10 +147,6 @@ export const selectGridHexes = (gridDimensions: Size, baseHexSize: number) => {
   });
 
   // Extract the center item from the list and put it at the end so it gets SVG rendering priority
-  const centerCoord: PointLike = {
-    x: Math.round(gridDimensions.width / 2.0) - 1,
-    y: Math.round(gridDimensions.height / 2.0) - 1
-  };
   const centerIndex = gridHexes.indexOf(centerCoord);
 
   if (centerIndex !== -1) {

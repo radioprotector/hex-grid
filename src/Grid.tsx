@@ -20,26 +20,42 @@ function Grid(): JSX.Element {
   const screenDimensions = useAppSelector((state) => state.hexGrid.screenDimensions);
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
   const cellDimensions = useAppSelector((state) => state.hexGrid.cellDimensions);
+  const centerCoord = useAppSelector((state) => state.hexGrid.centerCoord);
   const baseHexSize = useAppSelector((state) => state.hexGrid.baseHexSize);
 
   // Map each cell to a discrete component.
+  const cellHexes = useMemo(
+    () => {
+      return selectGridHexes(gridDimensions, centerCoord, baseHexSize);
+    },
+    [gridDimensions, centerCoord, baseHexSize]);
+
   const cellElements = useMemo(
     () => {
-      return selectGridHexes(gridDimensions, baseHexSize)
-        .map((hex) => {
+      return cellHexes.map((hex) => {
           return <Cell
             key={hexToKey(hex)}
             hex={hex}
           />
         });
     },
-    [gridDimensions, baseHexSize]);
+    [cellHexes]);
+
+  // Move the cells to the up and left in a way that will align the center.
+  // At a minimum, we need to ensure that the gaps between the "offset" rows/columns aren't visible.
+  let verticalOffset = -cellDimensions.height / 2.0;
+  verticalOffset -= (cellDimensions.height - (screenDimensions.height % cellDimensions.height)) / 2.0;
+
+  let horizontalOffset = cellDimensions.width * -0.75;
+  horizontalOffset += 0.25 * (screenDimensions.width % cellDimensions.width);
 
   const style = {
-    width: screenDimensions.width + cellDimensions.width,
-    height: screenDimensions.height + cellDimensions.height,
-    marginLeft: -(cellDimensions.width / 2.0),
-    marginTop: -(cellDimensions.height / 2.0)
+    position: 'relative' as const,
+    width: `calc(100vw + ${cellDimensions.width}px)`,
+    height: `calc(100vh + ${cellDimensions.height}px)`,
+    left: horizontalOffset,
+    top: verticalOffset,
+    overflow: 'visible'
   };
 
   return (
