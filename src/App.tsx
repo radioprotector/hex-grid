@@ -219,6 +219,10 @@ function App(): JSX.Element {
           navigator.vibrate(50);
         }
       }
+
+      // Stop trying to scroll or do anything else
+      event.preventDefault();
+      event.stopPropagation();
     };
     
     // Handle both touch/mouse events for panning
