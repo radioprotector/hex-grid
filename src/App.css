@@ -4,7 +4,10 @@
 }
 
 .dragGuide svg {
+  position: relative;
+  top: -128px;
+  left: -128px;
   height: 256px;
   width: 256px;
-  opacity: 0.5;
+  opacity: 0.6;
 }

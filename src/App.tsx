@@ -10,6 +10,8 @@ function App(): JSX.Element {
   const dispatch = useAppDispatch();
   const baseHexSize = useAppSelector((state) => state.hexGrid.baseHexSize);
   const [isPanning, setIsPanning] = useState(false);
+  const [helpOverlayX, setHelpOverlayX] = useState(0);
+  const [helpOverlayY, setHelpOverlayY] = useState(0);
   const lastPannedClientX = useRef(0);
   const lastPannedClientY = useRef(0);
 
@@ -116,10 +118,12 @@ function App(): JSX.Element {
       setIsPanning(true);
       lastPannedClientX.current = currentClientX;
       lastPannedClientY.current = currentClientY;
+
+      // Also update the help overlay position
+      setHelpOverlayX(currentClientX);
+      setHelpOverlayY(currentClientY);
   
-      if (isPanning) {
-        console.log(`pan start: (${currentClientX}, ${currentClientY})`);
-      }
+      console.log(`pan start: (${currentClientX}, ${currentClientY})`);
     }
 
     // Handle both touch/mouse events for panning
@@ -173,6 +177,12 @@ function App(): JSX.Element {
       const distanceX = currentClientX - lastPannedClientX.current;
       const distanceY = currentClientY - lastPannedClientY.current;
       const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+
+      // Periodically update the hex guide
+      if (distanceTotal >= baseHexSize / 2) {
+        setHelpOverlayX(currentClientX);
+        setHelpOverlayY(currentClientY);
+      }
   
       if (distanceTotal >= 2 * baseHexSize) {
         // When calculating atan2, invert the y-distance because HTML coordinates are in reverse
@@ -215,6 +225,11 @@ function App(): JSX.Element {
         // Update our "last panned" value
         lastPannedClientX.current = currentClientX;
         lastPannedClientY.current = currentClientY;
+
+        // Add a minor click
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50);
+        }
       }
     };
     
@@ -258,8 +273,8 @@ function App(): JSX.Element {
         className="dragGuide"
         style={{
           'display': isPanning ? 'block' : 'none',
-          'top': lastPannedClientY.current - 128,
-          'left': lastPannedClientX.current - 128
+          'top': helpOverlayY,
+          'left': helpOverlayX
         }}
       >
         <DragGuideIcon />
