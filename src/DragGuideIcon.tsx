@@ -1,4 +1,8 @@
+import { useAppSelector } from "./hooks";
+
 function DragGuideIcon(): JSX.Element {
+  const baseHue = useAppSelector((state) => state.color.hue);
+
   return (
     <svg
       viewBox="0 0 512 512"
@@ -26,19 +30,19 @@ function DragGuideIcon(): JSX.Element {
         >
           <stop
             offset="0"
-            style={{"stopColor": "hsl(180,50%,0%)"}}
+            style={{"stopColor": `hsl(${baseHue},70%,0%)`}}
           />
           <stop
             offset="0.5"
-            style={{"stopColor": "hsl(180,50%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue},70%,50%)`}}
           />
           <stop
             offset="1"
-            style={{"stopColor": "hsl(180,50%,100%)"}}
+            style={{"stopColor": `hsl(${baseHue},70%,100%)`}}
           />
         </linearGradient>
         <linearGradient
-          id="_Hue" 
+          id="_Hue"
           x1="0" 
           y1="0" 
           x2="1" 
@@ -47,23 +51,23 @@ function DragGuideIcon(): JSX.Element {
         >
           <stop
             offset="0"
-            style={{"stopColor": "hsl(0,70%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue - 120},70%,50%)`}}
           />
           <stop
             offset="0.25"
-            style={{"stopColor": "hsl(90,70%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue - 60},70%,50%)`}}
           />
           <stop
             offset="0.5"
-            style={{"stopColor": "hsl(180,70%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue},70%,50%)`}}
           />
           <stop
             offset="0.75"
-            style={{"stopColor": "hsl(270,70%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue + 60},70%,50%)`}}
           />
           <stop
             offset="1"
-            style={{"stopColor": "hsl(360,70%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue + 120},70%,50%)`}}
           />
         </linearGradient>
         <linearGradient
@@ -76,15 +80,15 @@ function DragGuideIcon(): JSX.Element {
         >
           <stop
             offset="0"
-            style={{"stopColor": "hsl(180,0%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue},0%,50%)`}}
           />
           <stop
             offset="0.5"
-            style={{"stopColor": "hsl(180,50%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue},50%,50%)`}}
           />
           <stop
             offset="1"
-            style={{"stopColor": "hsl(180,100%,50%)"}}
+            style={{"stopColor": `hsl(${baseHue},100%,50%)`}}
           />
         </linearGradient>
       </defs>
