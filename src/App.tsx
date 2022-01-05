@@ -189,24 +189,24 @@ function App(): JSX.Element {
   
         // Now map the different axes (assuming 6 "chunks")
         if (angle <= 60) {
-          // Right and up - adjust lightness
-          dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
+          // Right and up - adjust lightness upward
+          dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
         }
         else if (angle <= 120) {
-          // Straight up - adjust saturation downward
-          dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
+          // Straight up - adjust saturation upward
+          dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
         }
         else if (angle <= 180) {
           // Left and up - adjust hue (but double the scaling factor since hue is a larger range than the percentages)
           dispatch({ type: 'color/adjustHue', payload: scaleFactor * 2 });
         }
         else if (angle <= 240) {
-          // Left and down - adjust lightness
-          dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
+          // Left and down - adjust lightness downward
+          dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
         }
         else if (angle <= 300) {
-          // Straight down - adjust saturation upward
-          dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
+          // Straight down - adjust saturation downward
+          dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
         }
         else {
           // Right and down - adjust hue (but double the scaling factor since hue is a larger range than the percentages)

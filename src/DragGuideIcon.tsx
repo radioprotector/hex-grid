@@ -22,9 +22,9 @@ function DragGuideIcon(): JSX.Element {
       <defs>
         <linearGradient
           id="_Lightness"
-          x1="1"
+          x1="0"
           y1="0"
-          x2="0"
+          x2="1"
           y2="0"
           gradientTransform="rotate(-30 0.5 0.5)"
         >
@@ -72,9 +72,9 @@ function DragGuideIcon(): JSX.Element {
         </linearGradient>
         <linearGradient
           id="_Saturation"
-          x1="1"
+          x1="0"
           y1="0"
-          x2="0"
+          x2="1"
           y2="0"
           gradientTransform="rotate(-90 0.5 0.5)"
         >
