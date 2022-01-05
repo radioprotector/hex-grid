@@ -49,13 +49,14 @@ function Grid(): JSX.Element {
   let horizontalOffset = cellDimensions.width * -0.75;
   horizontalOffset += 0.25 * (screenDimensions.width % cellDimensions.width);
 
-  const style = {
+  const style: React.CSSProperties = {
     position: 'relative' as const,
     width: `calc(100vw + ${cellDimensions.width}px)`,
     height: `calc(100vh + ${cellDimensions.height}px)`,
     left: horizontalOffset,
     top: verticalOffset,
-    overflow: 'visible'
+    overflow: 'visible',
+    userSelect: 'none'
   };
 
   return (

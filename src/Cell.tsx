@@ -6,6 +6,7 @@ import { useAppSelector } from './hooks';
 
 function Cell(props: { hex: Hex<any> }): JSX.Element {
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
+  const cellDimensions = useAppSelector((state) => state.hexGrid.cellDimensions);
   const centerHexCoord = useAppSelector((state) => state.hexGrid.centerCoord);
   const pointString = useAppSelector((state) => state.hexGrid.cellPointsString);
   const baseHue = useAppSelector((state) => state.color.hue);
@@ -55,14 +56,18 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
         strokeOpacity={strokeOpacity}
         strokeWidth={strokeWidth}
       />
-      {/* <text
-        fill="#fff"
-        textAnchor="middle"
-        x="60"
-        y="60"
-      >
-        {props.hex.q}, {props.hex.r}, {props.hex.s}
-      </text> */}
+      {/* Only include debugging information in dev builds */
+        process.env.NODE_ENV !== 'production'
+        &&
+        <text
+          fill="#fff"
+          x={cellDimensions.width / 2}
+          y={cellDimensions.height / 2}
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {props.hex.q}, {props.hex.r}, {props.hex.s}
+        </text>}
     </g> 
   );
 }
