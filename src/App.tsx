@@ -142,6 +142,7 @@ function App(): JSX.Element {
   
       let currentClientX: number;
       let currentClientY: number;
+      let isTouchEvent: boolean;
   
       // Switch based on whether this is a touch or mouse event
       if (event.type === 'touchmove') {
@@ -152,13 +153,14 @@ function App(): JSX.Element {
           return;
         }
   
-        // Determine the "current" panning values to use
+        isTouchEvent = true;
         currentClientX = touchEvent.touches[0].clientX;
         currentClientY = touchEvent.touches[0].clientY;
       }
       else if (event.type === 'mousemove') {
         const mouseEvent = event as MouseEvent;
         
+        isTouchEvent = false;
         currentClientX = mouseEvent.clientX;
         currentClientY = mouseEvent.clientY;
       }
@@ -168,7 +170,7 @@ function App(): JSX.Element {
   
       // Determine the distance between the click and our "last panned" value.
       // If it's larger than our base hex size, we want to shift one of the colors
-      const scaleFactor = 5;
+      const scaleFactor = isTouchEvent ? 10 : 5;
       const distanceX = currentClientX - lastPannedClientX.current;
       const distanceY = currentClientY - lastPannedClientY.current;
       const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
