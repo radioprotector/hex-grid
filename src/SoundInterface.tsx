@@ -10,6 +10,7 @@ function SoundInterface(): JSX.Element {
   const mainLightness = useAppSelector((state) => state.color.lightness);
   const soundManager = useRef(new SoundManager(mainHue, mainSaturation, mainLightness));
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentVolume, setCurrentVolume] = useState(10);
 
   // Cascade color changes to the sound manager
   useEffect(() => {
@@ -24,8 +25,8 @@ function SoundInterface(): JSX.Element {
     soundManager.current.changeLightness(mainLightness);
   }, [mainLightness]);
 
-  // Prevent mousedown/touchstart events on the button from starting panning
-  const playButtonPanInterceptor = (event: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>): void => {
+  // Prevent mousedown/touchstart events in this area from starting panning
+  const panInterceptor = (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>): void => {
     event.stopPropagation();
   }
 
@@ -44,16 +45,41 @@ function SoundInterface(): JSX.Element {
     return false;
   };
 
+  const volumeSliderChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+    const wholeVolume = parseInt((event.target as HTMLInputElement).value, 10);
+
+    setCurrentVolume(wholeVolume)
+    soundManager.current.changeVolume(wholeVolume / 100);
+  }
+
   return (
-    <button
-      type="button"
-      id="audioToggle"
-      onMouseDown={playButtonPanInterceptor}
-      onTouchStart={playButtonPanInterceptor}
-      onClick={playButtonClicked}
+    <div
+      id="audioPanel"
+      onMouseDown={panInterceptor}
+      onTouchStart={panInterceptor}
     >
-      {isPlaying ? "Pause" : "Play"}
-    </button>
+      <button
+        type="button"
+        id="audioToggle"
+        onClick={playButtonClicked}
+      >
+        {isPlaying ? "Pause" : "Play"}
+      </button>
+      <div>
+        <label htmlFor="audioVolume">
+          Volume
+        </label>
+        <input
+          type="range"
+          id="audioVolume"
+          min="0"
+          max="100"
+          step="1"
+          value={currentVolume}
+          onInput={volumeSliderChanged}
+        />
+      </div>
+    </div>
   );
 }
 

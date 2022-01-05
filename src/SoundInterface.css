@@ -1,7 +1,10 @@
-#audioToggle {
+#audioPanel {
   position: fixed;
   top: 5vh;
   right: 5vw;
-  width: 10vw;
   z-index: 20;
+}
+
+#audioPanel button {
+  width: 5em;
 }

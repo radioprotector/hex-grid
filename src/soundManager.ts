@@ -156,7 +156,7 @@ export class SoundManager {
   /**
    * The gain level that is used for the output volume.
    */
-  private overallVolumeGain: number = 0.1;
+  private overallVolumeGain: number = 0.1; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
   private initializeAudioStructure(): void {
     // Don't do this more than once
