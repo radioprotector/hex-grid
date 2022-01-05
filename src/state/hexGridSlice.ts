@@ -51,9 +51,13 @@ function getCornerPointsString(hexFactory: HexFactory<HexArgs>): string {
  * Gets the state to use for the current grid screen.
  */
 function getStateForScreen(): HexGridState {
+  // HACK: Define viewport height while we're at it
+  // https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+  document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+  
   // Determine the available width/height and use that to determine the constraining direction
-  const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-  const screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+  const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+  const screenHeight = window.innerHeight || document.documentElement.clientHeight;
   const minDimension = Math.min(screenWidth, screenHeight);
 
   // Map the smallest dimension to a hex size
