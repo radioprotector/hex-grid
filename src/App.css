@@ -1,14 +1,17 @@
 .dragGuide {
   position: fixed;
   z-index: 10;
-  top: 50vh;
-  left: 50vw;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .dragGuide svg {
-  position: relative;
-  top: -128px;
-  left: -128px;
+  flex: none;
   height: 256px;
   width: 256px;
   opacity: 0.6;
