@@ -1,4 +1,5 @@
-.dragGuide {
+/* Use the dragOverlay to also intercept zoom/pan attempts on mobile */
+.dragOverlay {
   position: fixed;
   z-index: 10;
   height: 100vh; /* https://css-tricks.com/the-trick-to-viewport-units-on-mobile/ */
@@ -11,7 +12,7 @@
   align-items: center;
 }
 
-.dragGuide svg {
+.dragOverlay svg {
   flex: none;
   height: 256px;
   width: 256px;

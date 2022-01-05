@@ -264,13 +264,11 @@ function App(): JSX.Element {
     <div
       style={{'cursor': isPanning ? 'grabbing' : 'grab'}}
     >
+      {/* Because this intercepts touch events, we always want to have it visible. */}
       <div
-        className="dragGuide"
-        style={{
-          'display': isPanning ? 'block' : 'none'
-        }}
+        className="dragOverlay"
       >
-        <DragGuideIcon />
+        {isPanning && <DragGuideIcon />}
       </div>
       <Grid />
       <ColorChangeHandler />
