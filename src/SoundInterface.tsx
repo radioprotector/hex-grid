@@ -11,6 +11,7 @@ function SoundInterface(): JSX.Element {
   const soundManager = useRef(new SoundManager(mainHue, mainSaturation, mainLightness));
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVolume, setCurrentVolume] = useState(10);
+  const [currentLfoIntensity, setCurrentLfoIntensity] = useState(50);
 
   // Cascade color changes to the sound manager
   useEffect(() => {
@@ -50,7 +51,14 @@ function SoundInterface(): JSX.Element {
 
     setCurrentVolume(wholeVolume)
     soundManager.current.changeVolume(wholeVolume / 100);
-  }
+  };
+
+  const lfoSliderChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+    const wholeIntensity = parseInt((event.target as HTMLInputElement).value, 10);
+
+    setCurrentLfoIntensity(wholeIntensity)
+    soundManager.current.changeLfoIntensity(wholeIntensity / 100);
+  };
 
   return (
     <div
@@ -77,6 +85,20 @@ function SoundInterface(): JSX.Element {
           step="1"
           value={currentVolume}
           onInput={volumeSliderChanged}
+        />
+      </div>
+      <div>
+        <label htmlFor="audioLfoIntensity">
+          LFO
+        </label>
+        <input
+          type="range"
+          id="audioLfoIntensity"
+          min="0"
+          max="100"
+          step="1"
+          value={currentLfoIntensity}
+          onInput={lfoSliderChanged}
         />
       </div>
     </div>

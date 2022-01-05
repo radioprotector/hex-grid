@@ -149,6 +149,31 @@ export class SoundManager {
   private chordGains: GainNode[] = [];
 
   /**
+   * The LFO oscillator node to use.
+   */
+  private lfoOscillatorNode: OscillatorNode | null = null;
+
+  /**
+   * The gain node that controls the degree to which the LFO is "on".
+   * Adjusted based on the LFO intensity.
+   * Together with the lfoOffGainNode, should have an overall gain of 1.0.
+   */
+  private lfoOnGainNode: GainNode | null = null;
+
+  /**
+   * The gain node that controls the degree to which the LFO is "off".
+   * Adjusted based on the LFO intensity.
+   * Together with the lfoOnGainNode, should have an overall gain of 1.0.
+   */
+  private lfoOffGainNode: GainNode | null = null;
+
+  /**
+   * The gain level that is used for the LFO "on" gain node.
+   * The LFO "off" gain node is 1.0 minus this value.
+   */
+  private overallLfoGain: number = 0.5; // XXX: See if this can be better consolidated with the SoundInterface UI default
+
+  /**
    * The final gain node that is used to control output volume.
    */
   private overallVolumeGainNode: GainNode | null = null;
@@ -195,11 +220,33 @@ export class SoundManager {
     thirdChordGain.connect(overallMixer);
     fifthChordGain.connect(overallMixer);
 
+    // Configure an optional LFO
+    this.lfoOscillatorNode = new OscillatorNode(this.audioContext, { type: 'sine' });
+    this.lfoOscillatorNode.frequency.setValueAtTime(15, this.audioContext.currentTime);
+
+    this.lfoOnGainNode = new GainNode(this.audioContext);
+    this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
+    this.lfoOscillatorNode.connect(this.lfoOnGainNode);
+
+    const lfoBackupSource = new ConstantSourceNode(this.audioContext);
+    this.lfoOffGainNode = new GainNode(this.audioContext);
+    this.lfoOffGainNode.gain.setValueAtTime(1 - this.overallLfoGain, this.audioContext.currentTime);
+    lfoBackupSource.connect(this.lfoOffGainNode);
+
+    const lfoSourceMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 2, channelCount: 1});
+    this.lfoOnGainNode.connect(lfoSourceMixer);
+    this.lfoOffGainNode.connect(lfoSourceMixer);
+
+    // Connect the main audio chain to the gain *node*, and the mixed LFO output to its gain *level*
+    const overallLfoGainNode = new GainNode(this.audioContext);
+    lfoSourceMixer.connect(overallLfoGainNode.gain);
+    overallMixer.connect(overallLfoGainNode);
+
     // Similarly, create the overall gain node so that we can control final volume
     this.overallVolumeGainNode = new GainNode(this.audioContext);
     this.overallVolumeGainNode.gain.setValueAtTime(this.overallVolumeGain, this.audioContext.currentTime);
 
-    overallMixer.connect(this.overallVolumeGainNode);
+    overallLfoGainNode.connect(this.overallVolumeGainNode);
     this.overallVolumeGainNode.connect(this.audioContext.destination);
 
     // Fill collections
@@ -367,9 +414,13 @@ export class SoundManager {
       this.fifthFrequencyOscillators.forEach((osc) => {
         osc.start();
       });
+
+      if (this.lfoOscillatorNode) {
+        this.lfoOscillatorNode.start();
+      }
     }
 
-    this.audioContext?.resume();
+    this.audioContext.resume();
   }
 
   /**
@@ -413,7 +464,7 @@ export class SoundManager {
    * @param volume The new output volume, on a 0.0-1.0 scale.
    */
   public changeVolume(volume: number): void {
-    this.overallVolumeGain = volume;
+    this.overallVolumeGain = clamp(volume, 0.0, 1.0);
 
     // Don't do anything else if we don't have audio in place yet
     if (this.audioContext === null || this.overallVolumeGainNode === null || !this.structureInitialized) {
@@ -421,5 +472,21 @@ export class SoundManager {
     }
 
     this.overallVolumeGainNode.gain.setValueAtTime(this.overallVolumeGain, this.audioContext.currentTime);
+  }
+
+  /**
+   * Changes the LFO intensity.
+   * @param intensity The LFO intensity, on a 0.0-1.0 scale.
+   */
+  public changeLfoIntensity(intensity: number) {
+    this.overallLfoGain = clamp(intensity, 0.0, 1.0);
+
+    // Don't do anything else if we don't have audio in place yet
+    if (this.audioContext === null || this.lfoOnGainNode === null || this.lfoOffGainNode === null || !this.structureInitialized) {
+      return;
+    }
+
+    this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
+    this.lfoOffGainNode.gain.setValueAtTime(1 - this.overallLfoGain, this.audioContext.currentTime);
   }
 }
