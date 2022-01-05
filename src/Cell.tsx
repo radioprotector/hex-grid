@@ -65,6 +65,7 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
           y={cellDimensions.height / 2}
           textAnchor="middle"
           dominantBaseline="middle"
+          textLength={cellDimensions.width * 0.66}
         >
           {props.hex.q}, {props.hex.r}, {props.hex.s}
         </text>}
