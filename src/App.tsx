@@ -217,9 +217,9 @@ function App(): JSX.Element {
         lastPannedClientX.current = currentClientX;
         lastPannedClientY.current = currentClientY;
 
-        // Add a minor click
-        if ('vibrate' in navigator) {
-          navigator.vibrate(50);
+        // Add some minor haptic feedback if this was a touch event
+        if (isTouchEvent && 'vibrate' in navigator) {
+          navigator.vibrate(40);
         }
       }
 
