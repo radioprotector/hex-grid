@@ -22,7 +22,7 @@ export type AppDispatch = typeof store.dispatch;
  * @param toRange The minimum/maximum range of the destination value.
  * @returns The resulting scaled value.
  */
-function scaleNumericValue(fromValue: number, fromRange: [number, number], toRange: [number, number]): number {
+export function scaleNumericValue(fromValue: number, fromRange: [number, number], toRange: [number, number]): number {
   const scalingFactor = (toRange[1] - toRange[0]) / (fromRange[1] - fromRange[0]);
   const valueInRange = Math.min(fromRange[1], Math.max(fromRange[0], fromValue)) - fromRange[0];
 
@@ -36,7 +36,7 @@ function scaleNumericValue(fromValue: number, fromRange: [number, number], toRan
  * @param maximum The maximum value in the range.
  * @returns The clamped value.
  */
-function clamp(value: number, minimum: number, maximum: number) {
+export function clamp(value: number, minimum: number, maximum: number) {
   return Math.max(minimum, Math.min(maximum, value));
 }
 

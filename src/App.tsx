@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "./hooks";
 
 import './App.css';
 import Grid from './Grid';
+import SoundInterface from "./SoundInterface";
 import ColorChangeHandler from './ColorChangeHandler';
 import DragGuideIcon from "./DragGuideIcon";
 import DebugDialog from "./DebugDialog";
@@ -271,6 +272,7 @@ function App(): JSX.Element {
         {isPanning && <DragGuideIcon />}
       </div>
       <Grid />
+      <SoundInterface />
       <ColorChangeHandler />
       {/* Only include debugging information in dev builds */
         process.env.NODE_ENV !== 'production'
