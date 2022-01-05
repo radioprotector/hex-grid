@@ -5,6 +5,7 @@ import './App.css';
 import Grid from './Grid';
 import ColorChangeHandler from './ColorChangeHandler';
 import DragGuideIcon from "./DragGuideIcon";
+import DebugDialog from "./DebugDialog";
 
 function App(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -271,6 +272,11 @@ function App(): JSX.Element {
       </div>
       <Grid />
       <ColorChangeHandler />
+      {/* Only include debugging information in dev builds */
+        process.env.NODE_ENV !== 'production'
+        &&
+        <DebugDialog />
+      }
     </div>
   );
 }

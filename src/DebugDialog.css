@@ -1,0 +1,10 @@
+#debugState {
+  position: fixed;
+  left: 5vw;
+  bottom: 5vh;
+  z-index: 10;
+  font-family: monospace;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  padding: 0.5vh 0.5vw;
+}
