@@ -41,18 +41,14 @@ function Grid(): JSX.Element {
     },
     [cellHexes]);
 
-  // Move the cells to the up and left in a way that will align the center.
-  // At a minimum, we need to ensure that the gaps between the "offset" rows/columns aren't visible.
-  let verticalOffset = -cellDimensions.height / 2.0;
-  verticalOffset -= (cellDimensions.height - (screenDimensions.height % cellDimensions.height)) / 2.0;
-
-  let horizontalOffset = cellDimensions.width * -0.75;
-  horizontalOffset += 0.25 * (screenDimensions.width % cellDimensions.width);
+  // The center hex element will be last in the collection.
+  // Shift the SVG up and to the left until the center of that hex matches the center of the screen.
+  const centerHexPoint = cellHexes[cellHexes.length - 1].toPoint();
+  let verticalOffset = (screenDimensions.height / 2) - centerHexPoint.y - (cellDimensions.height / 2);
+  let horizontalOffset = (screenDimensions.width / 2) - centerHexPoint.x - (cellDimensions.width / 2);
 
   const style: React.CSSProperties = {
     position: 'relative' as const,
-    width: `calc(100vw + ${cellDimensions.width}px)`,
-    height: `calc(100vh + ${cellDimensions.height}px)`,
     left: horizontalOffset,
     top: verticalOffset,
     overflow: 'visible',

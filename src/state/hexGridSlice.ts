@@ -87,8 +87,8 @@ function getStateForScreen(): HexGridState {
 
   // Calculate the center coordinate
   const centerCoord: PointLike = {
-    x: Math.round(cellColumns / 2.0) - 1,
-    y: Math.round(cellRows / 2.0) - 1
+    x: Math.floor(cellColumns / 2.0),
+    y: Math.floor(cellRows / 2.0)
   };
 
   // Generate the state and log
