@@ -78,12 +78,12 @@ function getStateForScreen(): HexGridState {
   
   // Calculate the correct number of columns and rows using flat-topped coordinates:
   // https://www.redblobgames.com/grids/hexagons/#basics
-  // Cell columns: the screen width / 0.75 cell width, plus two for the right edge
-  // Cell rows: the screen height / cell height, plus two for the bottom edge
+  // Cell columns: the screen width / 0.75 cell width, plus two for offsets/the right edge
+  // Cell rows: the screen height / cell height, plus three for offsets/the bottom edge (Mobile landscape is the cause for the third)
   const cellHeight = baseHexSize * Math.sqrt(3);
   const cellWidth = baseHexSize * 2;
   const cellColumns = Math.floor(screenWidth / (cellWidth * 0.75)) + 2;
-  const cellRows = Math.floor(screenHeight / cellHeight) + 2;
+  const cellRows = Math.floor(screenHeight / cellHeight) + 3;
 
   // Calculate the center coordinate
   const centerCoord: PointLike = {
