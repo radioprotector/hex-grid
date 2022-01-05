@@ -327,8 +327,8 @@ export class SoundManager {
     }
 
     // Apply the frequency value to all oscillator nodes
-    // XXX: Instead of going a full 50 semitones in either direction, keep it at 40 to avoid higher frequencies
-    const semitoneDistance = scaleNumericValue(clamp(this.lightness, 10, 90), [10, 90], [-40, 40]);
+    // Use a 2%-per-semitone scale to avoid the really aggravating frequencies
+    const semitoneDistance = scaleNumericValue(clamp(this.lightness, 0, 100), [0, 100], [-25, 25]);
     const frequency = Math.pow(2, semitoneDistance/12) * 440;
 
     this.baseFrequencyOscillators.forEach((node) => {
@@ -344,6 +344,9 @@ export class SoundManager {
     });
   }
 
+  /**
+   * Begins playing audio.
+   */
   public play(): void {
     if (this.audioContext === null) {
       this.audioContext = new AudioContext();
@@ -369,30 +372,46 @@ export class SoundManager {
     this.audioContext?.resume();
   }
 
+  /**
+   * Pauses playing audio.
+   */
   public pause(): void {
-    // Don't bother if this is paused
-    if (this.audioContext === null) {
-      return;
+    if (this.audioContext !== null) {
+      this.audioContext.suspend();
     }
-
-    this.audioContext.suspend();
   }
 
+  /**
+   * Updates the audio qualities based on the provided hue.
+   * @param hue The hue to use.
+   */
   public changeHue(hue: number): void {
     this.hue = hue % 360;
     this.cascadeHueToAudioNodes();
   }
 
+  /**
+   * Updates the audio qualities based on the provided saturation.
+   * @param saturation The saturation to use.
+   */
   public changeSaturation(saturation: number): void {
     this.saturation = saturation;
     this.cascadeSaturationToAudioNodes();
   }
 
+  /**
+   * Updates the audio qualities based on the provided lightness.
+   * @param lightness The lightness to use.
+   */
   public changeLightness(lightness: number): void {
     this.lightness = lightness;
     this.cascadeLightnessToAudioNodes();
   }
 
+  /**
+   * Changes the audio volume.
+   * @param volume The new output volume, on a 0.0-1.0 scale.
+   */
   public changeVolume(volume: number): void {
     this.overallVolumeGain = volume;
 
