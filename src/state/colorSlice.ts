@@ -9,7 +9,7 @@ interface ColorState {
 const initialState: ColorState = {
   hue: 300,
   saturation: 50,
-  lightness: 35
+  lightness: 40
 };
 
 export const colorSlice = createSlice({
