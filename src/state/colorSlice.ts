@@ -17,7 +17,16 @@ export const colorSlice = createSlice({
   initialState,
   reducers: {
     adjustHue: (state, action: PayloadAction<number>) => {
-      state.hue = (state.hue + action.payload) % 360;
+      let newHue = (state.hue + (action.payload % 360));
+
+      if (newHue < 0) {
+        newHue += 360;
+      }
+      else if (newHue > 360) {
+        newHue -= 360;
+      }
+
+      state.hue = newHue;
     },
     adjustSaturation: (state, action: PayloadAction<number>) => {
       state.saturation = Math.min(100, Math.max(0, state.saturation + action.payload));
