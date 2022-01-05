@@ -59,7 +59,10 @@ function getStateForScreen(): HexGridState {
   // Map the smallest dimension to a hex size
   let baseHexSize = 72;
 
-  if (minDimension <= 768) {
+  if (minDimension <= 640) {
+    baseHexSize = 36;
+  }
+  else if (minDimension <= 768) {
     baseHexSize = 48;
   }
   else if (minDimension <= 1024) {
