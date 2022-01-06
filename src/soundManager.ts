@@ -12,6 +12,83 @@ interface WaveformNodes<NodeType extends AudioNode> {
 }
 
 /**
+ * Describes the chain of audio nodes for implementing output at a specific frequency.
+ */
+interface FrequencyOscillatorChain {
+  /**
+   * The waveform-specific oscillator nodes.
+   * The frequencies are adjusted based on the lightness.
+   */
+  oscillators: WaveformNodes<OscillatorNode>;
+
+  /**
+   * The waveform-specific gain nodes.
+   * The gains are adjusted based on the hue.
+   */
+  oscillatorGains: WaveformNodes<GainNode>;
+
+  /**
+   * The final output node.
+   * For chord frequencies, the gain is adjusted based on the saturation.
+   */
+  output: GainNode;
+}
+
+/**
+ * Describes the chain of audio nodes for implementing a variable LFO.
+ */
+interface LfoChain {
+  /**
+   * The waveform oscillator.
+   */
+  oscillator: OscillatorNode;
+
+  /**
+   * The gain node used to weight how much the LFO is "on".
+   * Together with the constantGain, should have a total gain of 1.0.
+   */
+  oscillatorGain: GainNode;
+
+  /**
+   * The gain node used to weight how much the LFO is "off".
+   * Together with the oscillatorGain, should have a total gain of 1.0.
+   */
+  constantGain: GainNode;
+
+  /**
+   * The final output node whose gain is varied based on the LFO.
+   */
+  lfoOutput: GainNode;
+}
+
+/**
+ * Describes the chain of audio nodes for implementing a variable reverb.
+ */
+interface ReverbChain {
+  /**
+   * The convolver node for applying reverb.
+   */
+  reverbConvolver: ConvolverNode;
+
+  /**
+   * The gain node used to weight how much the reverb is "on".
+   * Together with the dryGain, should have a total gain of 1.0.
+   */
+  wetGain: GainNode;
+
+  /**
+   * The gain node used to weight how much the reverb is "off".
+   * Together with the wetGain, should have a total gain of 1.0.
+   */
+  dryGain: GainNode;
+
+  /**
+   * The final output node combining both "wet" and "dry" signals.
+   */
+  reverbOutput: ChannelMergerNode;
+}
+
+/**
  * Creates a batch of waveform-specific oscillator nodes.
  * @param context The audio context to use.
  * @param semitones The number of semitones to detune the oscillators by. Optional.
@@ -86,6 +163,161 @@ function createOscillatorsMixer(context: AudioContext, oscillatorGains: Waveform
   return merger;
 }
 
+/**
+ * Creates an oscillator structure for one output frequency, culminating in a final gain node.
+ * @param context The audio context to use.
+ * @param semitones The number of semitones to detune the oscillators by. Optional.
+ * @returns The resulting oscillator structure.
+ */
+function createOscillatorStructure(context: AudioContext, semitones: number | undefined = undefined): FrequencyOscillatorChain {
+  const oscillators = createOscillators(context, semitones);
+  const oscillatorGains = createOscillatorGains(context, oscillators);
+  const oscillatorsMixer = createOscillatorsMixer(context, oscillatorGains);
+
+  const output = new GainNode(context);
+  oscillatorsMixer.connect(output);
+
+  return {
+    oscillators,
+    oscillatorGains,
+    output
+  };
+}
+
+/**
+ * Creates an LFO structure, culminating in a final gain node that can be used to modulate the output.
+ * @param context The audio context to use.
+ * @param frequency The frequency to use for the LFO.
+ * @param gain The gain to use for the variable portion of the LFO.
+ * @returns The resulting LFO chain.
+ */
+function createLfoStructure(context: AudioContext, frequency: number, gain: number): LfoChain {
+  // Start with the oscillator
+  const oscillator = new OscillatorNode(context, { type: 'sine' });
+  oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+
+  // Feed that into a variable gain node for when the LFO is "on"
+  const oscillatorGain = new GainNode(context);
+  oscillatorGain.gain.setValueAtTime(gain, context.currentTime);
+  oscillator.connect(oscillatorGain);
+
+  // Create a constant gain node for when the LFO is "off"
+  const constantSource = new ConstantSourceNode(context);
+  const constantGain = new GainNode(context);
+  constantGain.gain.setValueAtTime(1 - gain, context.currentTime);
+  constantSource.connect(constantGain);
+
+  // Combine the on/off channels
+  const gainMixer = new ChannelMergerNode(context, { numberOfInputs: 2, channelCount: 1 });
+  oscillatorGain.connect(gainMixer);
+  constantGain.connect(gainMixer);
+
+  // Connect the the mixed LFO output to the final output node
+  const lfoOutput = new GainNode(context);
+  gainMixer.connect(lfoOutput.gain);
+
+  return {
+    oscillator,
+    oscillatorGain,
+    constantGain,
+    lfoOutput
+  }
+}
+
+/**
+ * Creates a reverb structure that supports variable gain.
+ * @param context The audio context to use.
+ * @param gain The gain to use for the reverb.
+ * @param input The incoming audio to reverb.
+ * @returns The resulting reverb chain.
+ */
+function createReverbStructure(context: AudioContext, gain: number, input: AudioNode): ReverbChain {
+  // Create a reverb node - we'll set up the 
+  const reverbConvolver = new ConvolverNode(context);
+
+  // Create a gain node for when reverb is being used
+  const wetGain = new GainNode(context);
+  wetGain.gain.setValueAtTime(gain, context.currentTime);
+  reverbConvolver.connect(wetGain);
+
+  // Create a gain node for when reverb is *not* being used
+  const dryGain = new GainNode(context);
+  dryGain.gain.setValueAtTime(1 - gain, context.currentTime);
+
+  // Combine the reverb nodes in a mixer
+  const reverbOutput = new ChannelMergerNode(context, { numberOfInputs: 2, channelCount: 1});
+  wetGain.connect(reverbOutput);
+  dryGain.connect(reverbOutput);
+
+  // Ensure the input node feeds into both the convolver and the "dry" gain
+  input.connect(reverbConvolver);
+  input.connect(dryGain);
+
+  return {
+    reverbConvolver,
+    wetGain,
+    dryGain,
+    reverbOutput
+  }
+}
+
+/**
+ * Starts all oscillator nodes in the provided chains.
+ * @param chains The chains containing the oscillator nodes.
+ */
+function startOscillators(...chains: (FrequencyOscillatorChain | null)[]): void {
+  for (let chain of chains) {
+    // Skip over nulls
+    if (chain === null) {
+      continue;
+    }
+
+    chain.oscillators.square.start();
+    chain.oscillators.sawtooth.start();
+    chain.oscillators.sine.start();
+  }
+}
+
+/**
+ * Updates all oscillator nodes in the provided chains to use the specified frequency.
+ * @param frequency The frequency to use.
+ * @param atTime The time at which to assign the frequency.
+ * @param chains The chains containing the oscillator nodes to update.
+ */
+function assignWaveformFrequency(frequency: number, atTime: number, ...chains: (FrequencyOscillatorChain | null)[]): void {
+  for (let chain of chains) {
+    // Skip over nulls
+    if (chain === null) {
+      continue;
+    }
+
+    chain.oscillators.square.frequency.setValueAtTime(frequency, atTime);
+    chain.oscillators.sawtooth.frequency.setValueAtTime(frequency, atTime);
+    chain.oscillators.sine.frequency.setValueAtTime(frequency, atTime);
+  }
+}
+
+/**
+ * Updates all waveform-specific gain nodes in the provided chains to use the indicated waveform-specific gain levels.
+ * @param square The gain level to use for square waveforms.
+ * @param sawtooth The gain level to use for sawtooth waveforms.
+ * @param sine The gain level to use for sine waveforms.
+ * @param atTime The time at which to assign the gain levels.
+ * @param chains The chains containing the oscillator nodes to update.
+ */
+function assignWaveformGains(square: number, sawtooth: number, sine: number, atTime: number, ...chains: (FrequencyOscillatorChain | null)[]): void {
+  for (let chain of chains) {
+    // Skip over nulls
+    if (chain === null) {
+      continue;
+    }
+
+    chain.oscillatorGains.square.gain.setValueAtTime(square, atTime);
+    chain.oscillatorGains.sawtooth.gain.setValueAtTime(sawtooth, atTime);
+    chain.oscillatorGains.sine.gain.setValueAtTime(sine, atTime);
+  }
+}
+
 export class SoundManager {
 
   constructor(
@@ -107,51 +339,29 @@ export class SoundManager {
   private audioContext: AudioContext | null = null;
 
   /**
-   * The oscillator nodes that are tuned to the base frequency.
-   * Adjusted based on the lightness.
+   * The node chain to use for the base frequency.
    */
-  private baseFrequencyOscillators: OscillatorNode[] = [];
+  private baseFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
-   * The oscillator nodes that are tuned to a major third of the base frequency.
-   * Adjusted based on the lightness.
+   * The node chain to use for the major third frequency.
    */
-  private thirdFrequencyOscillators: OscillatorNode[] = [];
+  private thirdFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
-   * The oscillator nodes that are tuned to a perfect fifth of the base frequency.
-   * Adjusted based on the lightness.
+   * The node chain to use for the perfect fifth frequency.
    */
-  private fifthFrequencyOscillators: OscillatorNode[] = [];
+  private fifthFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
-   * The gain nodes that control the output of all square oscillators.
-   * Adjusted based on the hue.
+   * The node chain to use for the LFO effect.
    */
-  private squareWaveformGains: GainNode[] = [];
+  private lfoChain: LfoChain | null = null;
 
   /**
-   * The gain nodes that control the output of all sawtooth oscillators.
-   * Adjusted based on the hue.
+   * The node chain to use for the reverb effect.
    */
-  private sawWaveformGains: GainNode[] = [];
-
-  /**
-   * The gain nodes that control the output of all sine oscillators.
-   * Adjusted based on the hue.
-   */
-  private sineWaveformGains: GainNode[] = [];
-
-  /**
-   * The gain nodes that control the output of the chord chains.
-   * Adjusted based on the saturation.
-   */
-  private chordGains: GainNode[] = [];
-
-  /**
-   * The LFO oscillator node to use.
-   */
-  private lfoOscillatorNode: OscillatorNode | null = null;
+  private reverbChain: ReverbChain | null = null;
 
   /**
    * The frequency that is used for the output volume.
@@ -159,24 +369,16 @@ export class SoundManager {
   private lfoFrequency: number = 15; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
   /**
-   * The gain node that controls the degree to which the LFO is "on".
-   * Adjusted based on the LFO intensity.
-   * Together with the lfoOffGainNode, should have an overall gain of 1.0.
-   */
-  private lfoOnGainNode: GainNode | null = null;
-
-  /**
-   * The gain node that controls the degree to which the LFO is "off".
-   * Adjusted based on the LFO intensity.
-   * Together with the lfoOnGainNode, should have an overall gain of 1.0.
-   */
-  private lfoOffGainNode: GainNode | null = null;
-
-  /**
    * The gain level that is used for the LFO "on" gain node.
    * The LFO "off" gain node is 1.0 minus this value.
    */
-  private overallLfoGain: number = 0.5; // XXX: See if this can be better consolidated with the SoundInterface UI default
+  private lfoGain: number = 0.5; // XXX: See if this can be better consolidated with the SoundInterface UI default
+ 
+   /**
+    * The gain level that is used for the reverb "on" gain node.
+    * The reverb "off" gain node is 1.0 minus this value.
+    */
+   private reverbGain: number = 0.0; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
   /**
    * The final gain node that is used to control output volume.
@@ -198,72 +400,30 @@ export class SoundManager {
       this.audioContext = new AudioContext();
     }
 
-    // Set up the base frequency chain
-    const baseOscillators = createOscillators(this.audioContext);
-    const baseOscillatorGains = createOscillatorGains(this.audioContext, baseOscillators);
-    const baseOscillatorsMixer = createOscillatorsMixer(this.audioContext, baseOscillatorGains);
-    const baseFrequencyGain = new GainNode(this.audioContext);
-    baseOscillatorsMixer.connect(baseFrequencyGain);
+    // Set up the frequency chains
+    this.baseFrequencyChain = createOscillatorStructure(this.audioContext);
+    this.thirdFrequencyChain = createOscillatorStructure(this.audioContext, 4);
+    this.fifthFrequencyChain = createOscillatorStructure(this.audioContext, 7);
 
-    // Set up the third semitone frequency chain
-    const thirdOscillators = createOscillators(this.audioContext, 4);
-    const thirdOscillatorGains = createOscillatorGains(this.audioContext, thirdOscillators);
-    const thirdOscillatorsMixer = createOscillatorsMixer(this.audioContext, thirdOscillatorGains);
-    const thirdChordGain = new GainNode(this.audioContext);
-    thirdOscillatorsMixer.connect(thirdChordGain);
+    // Create an overall mixer between the various frequency chains
+    const chainsMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 3, channelCount: 1 });
+    this.baseFrequencyChain.output.connect(chainsMixer);
+    this.thirdFrequencyChain.output.connect(chainsMixer);
+    this.fifthFrequencyChain.output.connect(chainsMixer);
 
-    // Set up the fifth semitone frequency chain
-    const fifthOscillators = createOscillators(this.audioContext, 7);
-    const fifthOscillatorGains = createOscillatorGains(this.audioContext, fifthOscillators);
-    const fifthOscillatorsMixer = createOscillatorsMixer(this.audioContext, fifthOscillatorGains);
-    const fifthChordGain = new GainNode(this.audioContext);
-    fifthOscillatorsMixer.connect(fifthChordGain);
+    // Create the LFO chain and ensure the mixed frequency chains funnel into it
+    this.lfoChain = createLfoStructure(this.audioContext, this.lfoFrequency, this.lfoGain);
+    chainsMixer.connect(this.lfoChain.lfoOutput);
 
-    // Create an overall mixer between the base frequency and the chords
-    const overallMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 3, channelCount: 1 });
-    baseFrequencyGain.connect(overallMixer);
-    thirdChordGain.connect(overallMixer);
-    fifthChordGain.connect(overallMixer);
+    // Feed the LFO output into the reverb structure
+    this.reverbChain = createReverbStructure(this.audioContext, this.reverbGain, this.lfoChain.lfoOutput);
 
-    // Configure an optional LFO
-    this.lfoOscillatorNode = new OscillatorNode(this.audioContext, { type: 'sine' });
-    this.lfoOscillatorNode.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
-
-    this.lfoOnGainNode = new GainNode(this.audioContext);
-    this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
-    this.lfoOscillatorNode.connect(this.lfoOnGainNode);
-
-    const lfoBackupSource = new ConstantSourceNode(this.audioContext);
-    this.lfoOffGainNode = new GainNode(this.audioContext);
-    this.lfoOffGainNode.gain.setValueAtTime(1 - this.overallLfoGain, this.audioContext.currentTime);
-    lfoBackupSource.connect(this.lfoOffGainNode);
-
-    const lfoSourceMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 2, channelCount: 1});
-    this.lfoOnGainNode.connect(lfoSourceMixer);
-    this.lfoOffGainNode.connect(lfoSourceMixer);
-
-    // Connect the main audio chain to the gain *node*, and the mixed LFO output to its gain *level*
-    const overallLfoGainNode = new GainNode(this.audioContext);
-    lfoSourceMixer.connect(overallLfoGainNode.gain);
-    overallMixer.connect(overallLfoGainNode);
-
-    // Similarly, create the overall gain node so that we can control final volume
+    // Create an overall gain node so that we can control final volume
     this.overallVolumeGainNode = new GainNode(this.audioContext);
     this.overallVolumeGainNode.gain.setValueAtTime(this.overallVolumeGain, this.audioContext.currentTime);
 
-    overallLfoGainNode.connect(this.overallVolumeGainNode);
+    this.reverbChain.reverbOutput.connect(this.overallVolumeGainNode);
     this.overallVolumeGainNode.connect(this.audioContext.destination);
-
-    // Fill collections
-    this.baseFrequencyOscillators.push(baseOscillators.square, baseOscillators.sawtooth, baseOscillators.sine);
-    this.thirdFrequencyOscillators.push(thirdOscillators.square, thirdOscillators.sawtooth, thirdOscillators.sine);
-    this.fifthFrequencyOscillators.push(fifthOscillators.square, fifthOscillators.sawtooth, fifthOscillators.sine);
-
-    this.squareWaveformGains.push(baseOscillatorGains.square, thirdOscillatorGains.square, fifthOscillatorGains.square);
-    this.sawWaveformGains.push(baseOscillatorGains.sawtooth, thirdOscillatorGains.sawtooth, fifthOscillatorGains.sawtooth);
-    this.sineWaveformGains.push(baseOscillatorGains.sine, thirdOscillatorGains.sine, fifthOscillatorGains.sine);
-
-    this.chordGains.push(thirdChordGain, fifthChordGain);
 
     // We're done!
     this.structureInitialized = true;
@@ -345,17 +505,14 @@ export class SoundManager {
     }
 
     // Cascade the components to the relevant nodes
-    this.squareWaveformGains.forEach((node) => {
-      node.gain.setValueAtTime(redSquareComponent, this.audioContext!.currentTime);
-    });
-
-    this.sawWaveformGains.forEach((node) => {
-      node.gain.setValueAtTime(greenSawComponent, this.audioContext!.currentTime);
-    });
-    
-    this.sineWaveformGains.forEach((node) => {
-      node.gain.setValueAtTime(blueSineComponent, this.audioContext!.currentTime);
-    });
+    assignWaveformGains(
+      redSquareComponent,
+      greenSawComponent,
+      blueSineComponent,
+      this.audioContext!.currentTime,
+      this.baseFrequencyChain,
+      this.thirdFrequencyChain,
+      this.fifthFrequencyChain);
   }
 
   private cascadeSaturationToAudioNodes(): void {
@@ -367,9 +524,8 @@ export class SoundManager {
     // Apply the saturation as a gain value to all chord nodes
     const chordGains = clamp(this.saturation, 0, 100) / 100.0;
 
-    this.chordGains.forEach((node) => {
-      node.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
-    });
+    this.thirdFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
+    this.fifthFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
   }
 
   private cascadeLightnessToAudioNodes(): void {
@@ -383,17 +539,12 @@ export class SoundManager {
     const semitoneDistance = scaleNumericValue(clamp(this.lightness, 0, 100), [0, 100], [-25, 25]);
     const frequency = Math.pow(2, semitoneDistance/12) * 440;
 
-    this.baseFrequencyOscillators.forEach((node) => {
-      node.frequency.setValueAtTime(frequency, this.audioContext!.currentTime);
-    });
-
-    this.thirdFrequencyOscillators.forEach((node) => {
-      node.frequency.setValueAtTime(frequency, this.audioContext!.currentTime);
-    });
-    
-    this.fifthFrequencyOscillators.forEach((node) => {
-      node.frequency.setValueAtTime(frequency, this.audioContext!.currentTime);
-    });
+    assignWaveformFrequency(
+      frequency,
+      this.audioContext!.currentTime,
+      this.baseFrequencyChain,
+      this.thirdFrequencyChain,
+      this.fifthFrequencyChain);
   }
 
   /**
@@ -408,20 +559,12 @@ export class SoundManager {
       this.cascadeLightnessToAudioNodes();
       this.cascadeSaturationToAudioNodes();
 
-      this.baseFrequencyOscillators.forEach((osc) => {
-        osc.start();
-      });
+      // Start all of the oscillators in the frequency chain
+      startOscillators(this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
 
-      this.thirdFrequencyOscillators.forEach((osc) => {
-        osc.start();
-      });
-
-      this.fifthFrequencyOscillators.forEach((osc) => {
-        osc.start();
-      });
-
-      if (this.lfoOscillatorNode) {
-        this.lfoOscillatorNode.start();
+      // Ensure the LFO chain is also initialized
+      if (this.lfoChain !== null) {
+        this.lfoChain.oscillator.start();
       }
     }
 
@@ -484,29 +627,29 @@ export class SoundManager {
    * @param intensity The LFO intensity, on a 0.0-1.0 scale.
    */
   public changeLfoIntensity(intensity: number) {
-    this.overallLfoGain = clamp(intensity, 0.0, 1.0);
+    this.lfoGain = clamp(intensity, 0.0, 1.0);
 
     // Don't do anything else if we don't have audio in place yet
-    if (this.audioContext === null || this.lfoOnGainNode === null || this.lfoOffGainNode === null || !this.structureInitialized) {
+    if (this.audioContext === null || this.lfoChain === null || !this.structureInitialized) {
       return;
     }
 
-    this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
-    this.lfoOffGainNode.gain.setValueAtTime(1 - this.overallLfoGain, this.audioContext.currentTime);
+    this.lfoChain.oscillatorGain.gain.setValueAtTime(this.lfoGain, this.audioContext.currentTime);
+    this.lfoChain.constantGain.gain.setValueAtTime(1 - this.lfoGain, this.audioContext.currentTime);
   }
 
   /**
    * Changes the LFO frequency.
-   * @param frequency The LFO frequency, on a 1-30Hz scale.
+   * @param frequency The LFO frequency, on a 1-30 Hz scale.
    */
   public changeLfoFrequency(frequency: number) {
     this.lfoFrequency = clamp(frequency, 1, 30);
 
     // Don't do anything else if we don't have audio in place yet
-    if (this.audioContext === null || this.lfoOscillatorNode === null || !this.structureInitialized) {
+    if (this.audioContext === null || this.lfoChain === null || !this.structureInitialized) {
       return;
     }
 
-    this.lfoOscillatorNode.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
+    this.lfoChain.oscillator.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
   }
 }
