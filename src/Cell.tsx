@@ -56,8 +56,8 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
         strokeOpacity={strokeOpacity}
         strokeWidth={strokeWidth}
       />
-      {/* Only include debugging information in dev builds */
-        process.env.NODE_ENV !== 'production'
+      {/* Only include debugging information in dev builds */}
+      {/* {process.env.NODE_ENV !== 'production'
         &&
         <text
           fill="#fff"
@@ -68,7 +68,7 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
           textLength={cellDimensions.width * 0.66}
         >
           {props.hex.q}, {props.hex.r}, {props.hex.s}
-        </text>}
+        </text>} */}
     </g> 
   );
 }
