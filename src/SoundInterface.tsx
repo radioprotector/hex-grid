@@ -12,6 +12,7 @@ function SoundInterface(): JSX.Element {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVolume, setCurrentVolume] = useState(10);
   const [currentLfoIntensity, setCurrentLfoIntensity] = useState(50);
+  const [currentLfoFrequency, setCurrentLfoFrequency] = useState(15);
 
   // Cascade color changes to the sound manager
   useEffect(() => {
@@ -53,11 +54,18 @@ function SoundInterface(): JSX.Element {
     soundManager.current.changeVolume(wholeVolume / 100);
   };
 
-  const lfoSliderChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+  const lfoIntensityChanged = (event: React.FormEvent<HTMLInputElement>): void => {
     const wholeIntensity = parseInt((event.target as HTMLInputElement).value, 10);
 
     setCurrentLfoIntensity(wholeIntensity)
     soundManager.current.changeLfoIntensity(wholeIntensity / 100);
+  };
+
+  const lfoFrequencyChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+    const wholeFrequency = parseInt((event.target as HTMLInputElement).value, 10);
+
+    setCurrentLfoFrequency(wholeFrequency)
+    soundManager.current.changeLfoFrequency(wholeFrequency);
   };
 
   return (
@@ -87,20 +95,39 @@ function SoundInterface(): JSX.Element {
           onInput={volumeSliderChanged}
         />
       </div>
-      <div>
-        <label htmlFor="audioLfoIntensity">
+      <fieldset>
+        <legend>
           LFO
-        </label>
-        <input
-          type="range"
-          id="audioLfoIntensity"
-          min="0"
-          max="100"
-          step="1"
-          value={currentLfoIntensity}
-          onInput={lfoSliderChanged}
-        />
-      </div>
+        </legend>
+        <div>
+          <label htmlFor="audioLfoIntensity">
+            Intensity
+          </label>
+          <input
+            type="range"
+            id="audioLfoIntensity"
+            min="0"
+            max="100"
+            step="1"
+            value={currentLfoIntensity}
+            onInput={lfoIntensityChanged}
+          />
+        </div>
+        <div>
+          <label htmlFor="audioLfoFrequency">
+            Frequency
+          </label>
+          <input
+            type="range"
+            id="audioLfoFrequency"
+            min="1"
+            max="30"
+            step="1"
+            value={currentLfoFrequency}
+            onInput={lfoFrequencyChanged}
+          />
+        </div>
+      </fieldset>
     </div>
   );
 }

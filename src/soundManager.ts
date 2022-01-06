@@ -154,6 +154,11 @@ export class SoundManager {
   private lfoOscillatorNode: OscillatorNode | null = null;
 
   /**
+   * The frequency that is used for the output volume.
+   */
+  private lfoFrequency: number = 15; // XXX: See if this can be better consolidated with the SoundInterface UI default
+
+  /**
    * The gain node that controls the degree to which the LFO is "on".
    * Adjusted based on the LFO intensity.
    * Together with the lfoOffGainNode, should have an overall gain of 1.0.
@@ -222,7 +227,7 @@ export class SoundManager {
 
     // Configure an optional LFO
     this.lfoOscillatorNode = new OscillatorNode(this.audioContext, { type: 'sine' });
-    this.lfoOscillatorNode.frequency.setValueAtTime(15, this.audioContext.currentTime);
+    this.lfoOscillatorNode.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
 
     this.lfoOnGainNode = new GainNode(this.audioContext);
     this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
@@ -488,5 +493,20 @@ export class SoundManager {
 
     this.lfoOnGainNode.gain.setValueAtTime(this.overallLfoGain, this.audioContext.currentTime);
     this.lfoOffGainNode.gain.setValueAtTime(1 - this.overallLfoGain, this.audioContext.currentTime);
+  }
+
+  /**
+   * Changes the LFO frequency.
+   * @param frequency The LFO frequency, on a 1-30Hz scale.
+   */
+  public changeLfoFrequency(frequency: number) {
+    this.lfoFrequency = clamp(frequency, 1, 30);
+
+    // Don't do anything else if we don't have audio in place yet
+    if (this.audioContext === null || this.lfoOscillatorNode === null || !this.structureInitialized) {
+      return;
+    }
+
+    this.lfoOscillatorNode.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
   }
 }
