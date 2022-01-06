@@ -6,7 +6,7 @@ import { useAppSelector } from './hooks';
 
 function Cell(props: { hex: Hex<any> }): JSX.Element {
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
-  const cellDimensions = useAppSelector((state) => state.hexGrid.cellDimensions);
+  // const cellDimensions = useAppSelector((state) => state.hexGrid.cellDimensions); // Only used for debugging
   const centerHexCoord = useAppSelector((state) => state.hexGrid.centerCoord);
   const pointString = useAppSelector((state) => state.hexGrid.cellPointsString);
   const baseHue = useAppSelector((state) => state.color.hue);
