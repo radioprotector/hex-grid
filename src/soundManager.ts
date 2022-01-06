@@ -198,13 +198,11 @@ function createLfoStructure(context: AudioContext, frequency: number, gain: numb
 
   // Feed that into a variable gain node for when the LFO is "on"
   const oscillatorGain = new GainNode(context);
-  oscillatorGain.gain.setValueAtTime(gain, context.currentTime);
   oscillator.connect(oscillatorGain);
 
   // Create a constant gain node for when the LFO is "off"
   const constantSource = new ConstantSourceNode(context);
   const constantGain = new GainNode(context);
-  constantGain.gain.setValueAtTime(1 - gain, context.currentTime);
   constantSource.connect(constantGain);
 
   // Combine the on/off channels
@@ -215,6 +213,9 @@ function createLfoStructure(context: AudioContext, frequency: number, gain: numb
   // Connect the the mixed LFO output to the final output node
   const lfoOutput = new GainNode(context);
   gainMixer.connect(lfoOutput.gain);
+
+  // Make sure the wet/dry balance is configured
+  setWetDryBalance(oscillatorGain, constantGain, gain, context.currentTime);
 
   return {
     oscillator,
@@ -237,12 +238,10 @@ function createReverbStructure(context: AudioContext, gain: number, input: Audio
 
   // Create a gain node for when reverb is being used
   const wetGain = new GainNode(context);
-  wetGain.gain.setValueAtTime(gain, context.currentTime);
   reverbConvolver.connect(wetGain);
 
   // Create a gain node for when reverb is *not* being used
   const dryGain = new GainNode(context);
-  dryGain.gain.setValueAtTime(1 - gain, context.currentTime);
 
   // Combine the reverb nodes in a mixer
   const reverbOutput = new ChannelMergerNode(context, { numberOfInputs: 2, channelCount: 1});
@@ -252,6 +251,9 @@ function createReverbStructure(context: AudioContext, gain: number, input: Audio
   // Ensure the input node feeds into both the convolver and the "dry" gain
   input.connect(reverbConvolver);
   input.connect(dryGain);
+
+  // Make sure the wet/dry balance is configured
+  setWetDryBalance(wetGain, dryGain, gain, context.currentTime);
 
   return {
     reverbConvolver,
@@ -359,6 +361,18 @@ function assignWaveformGains(square: number, sawtooth: number, sine: number, atT
     chain.oscillatorGains.sawtooth.gain.setValueAtTime(sawtooth, atTime);
     chain.oscillatorGains.sine.gain.setValueAtTime(sine, atTime);
   }
+}
+
+/**
+ * Updates the provided pair of wet/dry gain nodes to reflect the specified "wet" gain.
+ * @param wetNode The gain node controlling the "wet" processed signal.
+ * @param dryNode The gain node controlling the "dry" unprocessed signal.
+ * @param wetGain The amount of gain to apply to the "wet" signal, on a 0.0-1.0 scale.
+ * @param atTime The time at which to assign the gain levels.
+ */
+function setWetDryBalance(wetNode: GainNode, dryNode: GainNode, wetGain: number, atTime: number) {
+  wetNode.gain.setValueAtTime(wetGain, atTime);
+  dryNode.gain.setValueAtTime(1.0 - wetGain, atTime);
 }
 
 export class SoundManager {
@@ -719,8 +733,7 @@ export class SoundManager {
       return;
     }
 
-    this.reverbChain.wetGain.gain.setValueAtTime(this.reverbGain, this.audioContext.currentTime);
-    this.reverbChain.dryGain.gain.setValueAtTime(1 - this.reverbGain, this.audioContext.currentTime);
+    setWetDryBalance(this.reverbChain.wetGain, this.reverbChain.dryGain, this.reverbGain, this.audioContext.currentTime);
   }
 
   /**
@@ -735,8 +748,7 @@ export class SoundManager {
       return;
     }
 
-    this.lfoChain.oscillatorGain.gain.setValueAtTime(this.lfoGain, this.audioContext.currentTime);
-    this.lfoChain.constantGain.gain.setValueAtTime(1 - this.lfoGain, this.audioContext.currentTime);
+    setWetDryBalance(this.lfoChain.oscillatorGain, this.lfoChain.constantGain, this.lfoGain, this.audioContext.currentTime);
   }
 
   /**
