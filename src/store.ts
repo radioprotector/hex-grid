@@ -59,11 +59,18 @@ export const selectIsCenter = (centerHex: PointLike, hex: Hex<any>): boolean => 
  * @returns A scaled hue value.
  */
 export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<any>): number => {
+  // Determine the range that we scale depending on how wide the grid is
+  let scalingRange = 72;
+
+  if (gridDimensions.width <= 8) {
+    scalingRange = 48;
+  }
+
   // Q = 0 to the maximum number of columns
   return Math.round(scaleNumericValue(
     hex.q,
     [0, gridDimensions.width],
-    [baseHue - 72, baseHue + 72]));
+    [baseHue - scalingRange, baseHue + scalingRange]));
 };
 
 /**
@@ -74,11 +81,18 @@ export const selectScaledHue = (baseHue: number, gridDimensions: Size, hex: Hex<
  * @returns A scaled saturation value.
  */
 export const selectScaledSaturation = (baseSaturation: number, gridDimensions: Size, hex: Hex<any>): number => {
+  // Determine the range that we scale depending on how tall the grid is, since this is a purely vertical scale
+  let scalingRange = 15;
+
+  if (gridDimensions.height <= 8) {
+    scalingRange = 10;
+  }
+
   // S = negative number of rows to positive number of rows
   const percentage = scaleNumericValue(
     hex.s,
     [-gridDimensions.height, gridDimensions.height],
-    [baseSaturation - 15, baseSaturation + 15]);
+    [baseSaturation - scalingRange, baseSaturation + scalingRange]);
 
   return Math.round(clamp(percentage, 0, 100));
 };
@@ -91,12 +105,19 @@ export const selectScaledSaturation = (baseSaturation: number, gridDimensions: S
  * @returns A scaled lightness value.
  */
 export const selectScaledLightness = (baseLightness: number, gridDimensions: Size, hex: Hex<any>): number => {
+  // Determine the range that we scale depending on how tall/wide the grid is, since this is a diagonal direction
+  let scalingRange = 15;
+
+  if (gridDimensions.width <= 8 || gridDimensions.height <= 8) {
+    scalingRange = 10;
+  }
+
   // R = negative number of rows to positive number of rows
-  // Map this in reverse
+  // Scale the range in reverse so that lightness goes in the direction that appears up
   const percentage = scaleNumericValue(
     hex.r,
     [-gridDimensions.height, gridDimensions.height],
-    [baseLightness + 15, baseLightness - 15]);
+    [baseLightness + scalingRange, baseLightness - scalingRange]);
 
   return Math.round(clamp(percentage, 0, 100));
 };
