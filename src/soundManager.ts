@@ -279,6 +279,49 @@ function startOscillators(...chains: (FrequencyOscillatorChain | null)[]): void 
 }
 
 /**
+ * Assigns a periodic wave to all oscillator nodes of a particular type.
+ * @param context The audio context to use.
+ * @param wavetableJson The JSON for the wavetable.
+ * @param type The type of oscillator nodes to update.
+ * @param chains The chains containing the oscillator nodes.
+ */
+function assignWaveformTable(context: AudioContext | null, wavetableJson: any, type: 'square' | 'sawtooth' | 'sine', ...chains: (FrequencyOscillatorChain | null)[]): void {
+  // Make sure we have a context
+  if (context === null) {
+    return;
+  }
+
+  // Make sure we have JSON
+  if (!wavetableJson || !Array.isArray(wavetableJson['real']) || !Array.isArray(wavetableJson['imag'])) {
+    return;
+  }
+
+  // Build the wavetable from the specified JSON
+  const wave = new PeriodicWave(context, { real: wavetableJson['real'], imag: wavetableJson['imag'] });
+
+  for (let chain of chains) {
+    // Skip over nulls
+    if (chain === null) {
+      continue;
+    }
+
+    switch (type) {
+      case 'square':
+        chain.oscillators.square.setPeriodicWave(wave);
+        break;
+
+      case 'sawtooth':
+        chain.oscillators.sawtooth.setPeriodicWave(wave);
+        break;
+
+      case 'sine':
+        chain.oscillators.sine.setPeriodicWave(wave);
+        break;
+    }
+  }
+}
+
+/**
  * Updates all oscillator nodes in the provided chains to use the specified frequency.
  * @param frequency The frequency to use.
  * @param atTime The time at which to assign the frequency.
@@ -427,6 +470,34 @@ export class SoundManager {
 
     // We're done!
     this.structureInitialized = true;
+
+    // Switch oscillators over to use wavetables
+    fetch('./assets/google/wavetable_08_Warm_Square')
+      .then((response) => response.json())
+      .then((tableJson) => {
+        assignWaveformTable(this.audioContext, tableJson, 'square', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+      })
+      .catch((reason) => {
+        console.error('error retrieving square wavetable', reason);
+      });
+
+    fetch('./assets/google/wavetable_06_Warm_Saw')
+      .then((response) => response.json())
+      .then((tableJson) => {
+        assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+      })
+      .catch((reason) => {
+        console.error('error retrieving saw wavetable', reason);
+      });
+
+    fetch('./assets/google/wavetable_Celeste')
+      .then((response) => response.json())
+      .then((tableJson) => {
+        assignWaveformTable(this.audioContext, tableJson, 'sine', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+      })
+      .catch((reason) => {
+        console.error('error retrieving sine wavetable', reason);
+      });
 
     // Ensure that we have an impulse response for the reverb
     fetch('./assets/google/impulse-responses_bright-hall.wav')
