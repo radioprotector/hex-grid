@@ -11,6 +11,7 @@ function SoundInterface(): JSX.Element {
   const soundManager = useRef(new SoundManager(mainHue, mainSaturation, mainLightness));
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVolume, setCurrentVolume] = useState(10);
+  const [currentReverbIntensity, setCurrentReverbIntensity] = useState(0);
   const [currentLfoIntensity, setCurrentLfoIntensity] = useState(50);
   const [currentLfoFrequency, setCurrentLfoFrequency] = useState(15);
 
@@ -54,6 +55,13 @@ function SoundInterface(): JSX.Element {
     soundManager.current.changeVolume(wholeVolume / 100);
   };
 
+  const reverbIntensityChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+    const wholeIntensity = parseInt((event.target as HTMLInputElement).value, 10);
+
+    setCurrentReverbIntensity(wholeIntensity)
+    soundManager.current.changeReverbIntensity(wholeIntensity / 100);
+  };
+
   const lfoIntensityChanged = (event: React.FormEvent<HTMLInputElement>): void => {
     const wholeIntensity = parseInt((event.target as HTMLInputElement).value, 10);
 
@@ -93,6 +101,20 @@ function SoundInterface(): JSX.Element {
           step="1"
           value={currentVolume}
           onInput={volumeSliderChanged}
+        />
+      </div>
+      <div>
+        <label htmlFor="audioReverb">
+          Reverb
+        </label>
+        <input
+          type="range"
+          id="audioReverb"
+          min="0"
+          max="100"
+          step="1"
+          value={currentReverbIntensity}
+          onInput={reverbIntensityChanged}
         />
       </div>
       <fieldset>

@@ -232,7 +232,7 @@ function createLfoStructure(context: AudioContext, frequency: number, gain: numb
  * @returns The resulting reverb chain.
  */
 function createReverbStructure(context: AudioContext, gain: number, input: AudioNode): ReverbChain {
-  // Create a reverb node - we'll set up the 
+  // Create a reverb node - the buffer will be set up later
   const reverbConvolver = new ConvolverNode(context);
 
   // Create a gain node for when reverb is being used
@@ -427,6 +427,20 @@ export class SoundManager {
 
     // We're done!
     this.structureInitialized = true;
+
+    // Ensure that we have an impulse response for the reverb
+    fetch('./assets/google/impulse-responses_bright-hall.wav')
+      .then((response) => response.arrayBuffer())
+      .then((buffer) => this.audioContext!.decodeAudioData(buffer))
+      .then((audioData) => {
+        if (this.reverbChain) {
+          console.debug('reverb chain initialized');
+          this.reverbChain.reverbConvolver.buffer = audioData;
+        }
+      })
+      .catch((reason) => {
+        console.error('error retrieving reverb data', reason);
+      });
   }
 
   private cascadeHueToAudioNodes(): void {
@@ -620,6 +634,22 @@ export class SoundManager {
     }
 
     this.overallVolumeGainNode.gain.setValueAtTime(this.overallVolumeGain, this.audioContext.currentTime);
+  }
+
+  /**
+   * Changes the reverb intensity.
+   * @param intensity The reverb intensity, on a 0.0-1.0 scale.
+   */
+   public changeReverbIntensity(intensity: number) {
+    this.reverbGain = clamp(intensity, 0.0, 1.0);
+
+    // Don't do anything else if we don't have audio in place yet
+    if (this.audioContext === null || this.reverbChain === null || !this.structureInitialized) {
+      return;
+    }
+
+    this.reverbChain.wetGain.gain.setValueAtTime(this.reverbGain, this.audioContext.currentTime);
+    this.reverbChain.dryGain.gain.setValueAtTime(1 - this.reverbGain, this.audioContext.currentTime);
   }
 
   /**
