@@ -500,7 +500,7 @@ export class SoundManager {
       });
 
     // Ensure that we have an impulse response for the reverb
-    fetch('./assets/google/impulse-responses_bright-hall.wav')
+    fetch('./assets/google/impulse-responses_matrix-reverb6.wav')
       .then((response) => response.arrayBuffer())
       .then((buffer) => this.audioContext!.decodeAudioData(buffer))
       .then((audioData) => {
