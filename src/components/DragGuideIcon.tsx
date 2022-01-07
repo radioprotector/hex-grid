@@ -1,4 +1,4 @@
-import { useAppSelector } from "./hooks";
+import { useAppSelector } from "../hooks";
 
 function DragGuideIcon(): JSX.Element {
   const baseHue = useAppSelector((state) => state.color.hue);

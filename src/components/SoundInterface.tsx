@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAppSelector } from "./hooks";
+import { useAppSelector } from "../hooks";
 
 import './SoundInterface.css';
-import { SoundManager } from "./soundManager";
+import { SoundManager } from "../soundManager";
 
 function SoundInterface(): JSX.Element {
   const mainHue = useAppSelector((state) => state.color.hue);

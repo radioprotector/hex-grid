@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "./hooks";
+
+import { useAppDispatch, useAppSelector } from "../hooks";
 
 import './App.css';
 import Grid from './Grid';

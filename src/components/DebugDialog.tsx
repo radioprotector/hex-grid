@@ -1,6 +1,6 @@
 
 import './DebugDialog.css';
-import { useAppSelector } from './hooks';
+import { useAppSelector } from '../hooks';
 
 function DebugDialog(): JSX.Element {
   const screenDimensions = useAppSelector((state) => state.hexGrid.screenDimensions);

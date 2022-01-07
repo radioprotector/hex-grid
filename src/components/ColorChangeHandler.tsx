@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { useAppSelector } from './hooks';
+
+import { useAppSelector } from '../hooks';
 
 function ColorChangeHandler(): null {
   const mainHue = useAppSelector((state) => state.color.hue);

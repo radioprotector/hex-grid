@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-
 import { Hex } from "honeycomb-grid";
-import { useAppSelector } from "./hooks";
-import { selectGridHexes } from "./state/hexGridSlice";
+
+import { useAppSelector } from "../hooks";
+import { selectGridHexes } from "../state/hexGridSlice";
 
 import Cell from './Cell';
 

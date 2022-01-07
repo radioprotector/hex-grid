@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-
 import { Hex } from 'honeycomb-grid';
-import { selectScaledHue, selectScaledSaturation, selectScaledLightness, selectIsCenter } from './store';
-import { useAppSelector } from './hooks';
+
+import { selectScaledHue, selectScaledSaturation, selectScaledLightness, selectIsCenter } from '../store';
+import { useAppSelector } from '../hooks';
 
 function Cell(props: { hex: Hex<any> }): JSX.Element {
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
