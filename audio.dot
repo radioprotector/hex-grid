@@ -1,0 +1,125 @@
+digraph audio {
+  rankdir = "LR"
+
+  subgraph cluster_BaseFreq {
+    label = "Base Frequency"
+
+    BaseFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
+    BaseFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
+    BaseFreqSine [label="Sin Osc", shape="circle", comment="Frequency based on lightness"]
+
+    BaseFreqSquareGain [label="Sqr Gain", shape="trapezium", comment="Gain based on hue"]
+    BaseFreqSawtoothGain [label="Saw Gain", shape="trapezium", comment="Gain based on hue"]
+    BaseFreqSineGain [label="Sin Gain", shape="trapezium", comment="Gain based on hue"]
+
+    BaseFreqMixer [label="Mixer", shape="box"]
+    BaseFreqOverallGain [label="Gain", shape="trapezium"]
+
+    BaseFreqSquare -> BaseFreqSquareGain
+    BaseFreqSawtooth -> BaseFreqSawtoothGain
+    BaseFreqSine -> BaseFreqSineGain
+
+    BaseFreqSquareGain -> BaseFreqMixer
+    BaseFreqSawtoothGain -> BaseFreqMixer
+    BaseFreqSineGain -> BaseFreqMixer
+
+    BaseFreqMixer -> BaseFreqOverallGain
+  }
+
+  subgraph cluster_ThirdFreq {
+    label = "Major Third Frequency"
+
+    ThirdFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
+    ThirdFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
+    ThirdFreqSine [label="Sin Osc", shape="circle", comment="Frequency based on lightness"]
+
+    ThirdFreqSquareGain [label="Sqr Gain", shape="trapezium", comment="Gain based on hue"]
+    ThirdFreqSawtoothGain [label="Saw Gain", shape="trapezium", comment="Gain based on hue"]
+    ThirdFreqSineGain [label="Sin Gain", shape="trapezium", comment="Gain based on hue"]
+
+    ThirdFreqMixer [label="Mixer", shape="box"]
+    ThirdFreqOverallGain [label="Gain", shape="trapezium", comment="Gain based on saturation"]
+
+    ThirdFreqSquare -> ThirdFreqSquareGain
+    ThirdFreqSawtooth -> ThirdFreqSawtoothGain
+    ThirdFreqSine -> ThirdFreqSineGain
+
+    ThirdFreqSquareGain -> ThirdFreqMixer
+    ThirdFreqSawtoothGain -> ThirdFreqMixer
+    ThirdFreqSineGain -> ThirdFreqMixer
+
+    ThirdFreqMixer -> ThirdFreqOverallGain
+  }
+
+  subgraph cluster_FifthFreq {
+    label = "Perfect Fifth Frequency"
+
+    FifthFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
+    FifthFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
+    FifthFreqSine [label="Sin Osc", shape="circle", comment="Frequency based on lightness"]
+
+    FifthFreqSquareGain [label="Sqr Gain", shape="trapezium", comment="Gain based on hue"]
+    FifthFreqSawtoothGain [label="Saw Gain", shape="trapezium", comment="Gain based on hue"]
+    FifthFreqSineGain [label="Sin Gain", shape="trapezium", comment="Gain based on hue"]
+
+    FifthFreqMixer [label="Mixer", shape="box"]
+    FifthFreqOverallGain [label="Gain", shape="trapezium", comment="Gain based on saturation"]
+
+    FifthFreqSquare -> FifthFreqSquareGain
+    FifthFreqSawtooth -> FifthFreqSawtoothGain
+    FifthFreqSine -> FifthFreqSineGain
+
+    FifthFreqSquareGain -> FifthFreqMixer
+    FifthFreqSawtoothGain -> FifthFreqMixer
+    FifthFreqSineGain -> FifthFreqMixer
+
+    FifthFreqMixer -> FifthFreqOverallGain
+  }
+
+  subgraph cluster_Lfo {
+    label = "LFO"
+
+    LfoWetOscillator [label="Sin Osc", shape="circle", comment="Frequency based on LFO frequency"]
+    LfoDryConstant [label="Constant", shape="circle"]
+    LfoWetGain [label="Wet Gain", shape="trapezium", comment="Gain based on LFO intensity"]
+    LfoDryGain [label="Dry Gain", shape="trapezium", comment="Gain based on lack of LFO intensity"]
+
+    LfoMixer [label="Mixer", shape="box"]
+
+    LfoWetOscillator -> LfoWetGain
+    LfoDryConstant -> LfoDryGain
+
+    LfoWetGain -> LfoMixer
+    LfoDryGain -> LfoMixer
+  }
+
+  subgraph cluster_Reverb {
+    label = "Reverb"
+
+    ReverbConvolver [label="Convolver", shape="house"]
+    ReverbWetGain [label="Wet Gain", shape="trapezium", comment="Gain based on reverb intensity"]
+    ReverbDryGain [label="Dry Gain", shape="trapezium", comment="Gain based on lack of reverb intensity"]
+    ReverbMixer   [label="Mixer", shape="box"]
+
+    ReverbConvolver -> ReverbWetGain
+    ReverbWetGain -> ReverbMixer
+    ReverbDryGain -> ReverbMixer
+  }
+
+  FrequenciesMixer [label="Mixer", shape="box"]
+  LfoApplyGain [label="LFO Application Gain", shape="trapezium"]
+  OverallVolumeGain [label="Volume Gain", shape="trapezium", comment="Gain based on overall volume"]
+
+  BaseFreqOverallGain -> FrequenciesMixer
+  ThirdFreqOverallGain -> FrequenciesMixer
+  FifthFreqOverallGain -> FrequenciesMixer
+
+  FrequenciesMixer -> LfoApplyGain [taillabel = "Audio"]
+  LfoMixer -> LfoApplyGain [taillabel = "Gain Param", style=dashed]
+
+  LfoApplyGain -> ReverbConvolver
+  LfoApplyGain -> ReverbDryGain
+
+  ReverbMixer -> OverallVolumeGain
+  OverallVolumeGain -> Destination
+}
