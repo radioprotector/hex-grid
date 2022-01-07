@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/hex-grid/static/css/main.739ca62a.chunk.css",
+    "main.js": "/hex-grid/static/js/main.78f196fd.chunk.js",
+    "main.js.map": "/hex-grid/static/js/main.78f196fd.chunk.js.map",
+    "runtime-main.js": "/hex-grid/static/js/runtime-main.08246172.js",
+    "runtime-main.js.map": "/hex-grid/static/js/runtime-main.08246172.js.map",
+    "static/js/2.62ed6847.chunk.js": "/hex-grid/static/js/2.62ed6847.chunk.js",
+    "static/js/2.62ed6847.chunk.js.map": "/hex-grid/static/js/2.62ed6847.chunk.js.map",
+    "index.html": "/hex-grid/index.html",
+    "static/css/main.739ca62a.chunk.css.map": "/hex-grid/static/css/main.739ca62a.chunk.css.map",
+    "static/js/2.62ed6847.chunk.js.LICENSE.txt": "/hex-grid/static/js/2.62ed6847.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.08246172.js",
+    "static/js/2.62ed6847.chunk.js",
+    "static/css/main.739ca62a.chunk.css",
+    "static/js/main.78f196fd.chunk.js"
+  ]
+}
