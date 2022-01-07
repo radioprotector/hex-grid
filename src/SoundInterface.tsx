@@ -104,7 +104,7 @@ function SoundInterface(): JSX.Element {
           >
             <svg
               className="feather">
-              <use href={'./assets/feather/feather-sprite.svg#' + ((isPlaying) ? 'pause' : 'play')} />
+              <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isPlaying) ? 'pause' : 'play')} />
             </svg>
             {isPlaying ? "Pause" : "Play"}
           </button>
@@ -116,7 +116,7 @@ function SoundInterface(): JSX.Element {
         >
           <svg
             className="feather">
-            <use href={'./assets/feather/feather-sprite.svg#' + ((isInterfaceExpanded) ? 'minimize-2' : 'maximize-2')} />
+            <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isInterfaceExpanded) ? 'minimize-2' : 'maximize-2')} />
           </svg>
           {isInterfaceExpanded ? "Hide Audio" : "Show Audio"}
         </button>

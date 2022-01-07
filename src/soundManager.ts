@@ -486,7 +486,7 @@ export class SoundManager {
     this.structureInitialized = true;
 
     // Switch oscillators over to use wavetables
-    fetch('./assets/google/wavetable_08_Warm_Square')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_08_Warm_Square')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'square', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
@@ -495,7 +495,7 @@ export class SoundManager {
         console.error('error retrieving square wavetable', reason);
       });
 
-    fetch('./assets/google/wavetable_06_Warm_Saw')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_06_Warm_Saw')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
@@ -504,7 +504,7 @@ export class SoundManager {
         console.error('error retrieving saw wavetable', reason);
       });
 
-    fetch('./assets/google/wavetable_Celeste')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_Celeste')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'sine', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
@@ -514,7 +514,7 @@ export class SoundManager {
       });
 
     // Ensure that we have an impulse response for the reverb
-    fetch('./assets/google/impulse-responses_matrix-reverb6.wav')
+    fetch(process.env.PUBLIC_URL + '/assets/google/impulse-responses_matrix-reverb6.wav')
       .then((response) => response.arrayBuffer())
       .then((buffer) => this.audioContext!.decodeAudioData(buffer))
       .then((audioData) => {
