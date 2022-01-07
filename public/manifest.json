@@ -1,6 +1,6 @@
 {
-  "short_name": "Color Hex",
-  "name": "Color Hex Navigator",
+  "short_name": "hex-grid",
+  "name": "hex-grid",
   "icons": [
     {
       "src": "favicon.ico",
