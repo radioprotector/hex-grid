@@ -429,7 +429,7 @@ export class SoundManager {
    * The gain level that is used for the LFO "on" gain node.
    * The LFO "off" gain node is 1.0 minus this value.
    */
-  private lfoGain: number = 0.5; // XXX: See if this can be better consolidated with the SoundInterface UI default
+  private lfoGain: number = 0.25; // XXX: See if this can be better consolidated with the SoundInterface UI default
  
    /**
     * The gain level that is used for the reverb "on" gain node.
