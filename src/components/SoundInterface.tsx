@@ -160,7 +160,7 @@ function SoundInterface(): JSX.Element {
           className="settingBlock"
         >
           <label htmlFor="audioLfoIntensity">
-            LFO Intensity
+            Wobble Intensity
           </label>
           <input
             type="range"
@@ -176,7 +176,7 @@ function SoundInterface(): JSX.Element {
           className="settingBlock"
         >
           <label htmlFor="audioLfoFrequency">
-            LFO Frequency
+            Wobble Frequency
           </label>
           <input
             type="range"
