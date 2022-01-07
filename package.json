@@ -1,6 +1,7 @@
 {
   "name": "hex-grid",
   "version": "0.1.0",
+  "description": "A hex-grid-driven color and audio scroller",
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.6.1",
@@ -11,6 +12,7 @@
     "@types/node": "^16.9.1",
     "@types/react": "^17.0.21",
     "@types/react-dom": "^17.0.9",
+    "env-cmd": "^10.1.0",
     "honeycomb-grid": "^3.1.8",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -22,6 +24,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "start:prod": "env-cmd -f .env.prodlocal react-scripts build && npx serve -s build -l 4000 -n",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -34,6 +37,7 @@
   "browserslist": {
     "production": [
       ">0.2%",
+      "supports audio-api",
       "not dead",
       "not op_mini all"
     ],
