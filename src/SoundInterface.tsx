@@ -10,7 +10,7 @@ function SoundInterface(): JSX.Element {
   const mainLightness = useAppSelector((state) => state.color.lightness);
   const soundManager = useRef(new SoundManager(mainHue, mainSaturation, mainLightness));
 
-  const [isInterfaceExpanded, setInterfaceExpanded] = useState(true);
+  const [isInterfaceExpanded, setInterfaceExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVolume, setCurrentVolume] = useState(10);
   const [currentReverbIntensity, setCurrentReverbIntensity] = useState(0);

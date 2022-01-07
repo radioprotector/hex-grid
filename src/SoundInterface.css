@@ -3,6 +3,7 @@
   top: 5vh;
   right: 5vw;
   z-index: 20;
+  max-width: 90vw;
 }
 
 #audioPanel .settingBlock {
