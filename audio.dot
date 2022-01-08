@@ -2,7 +2,7 @@ digraph audio {
   rankdir = "LR"
 
   subgraph cluster_BaseFreq {
-    label = "Base Frequency"
+    label = "Root Frequency"
 
     BaseFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
     BaseFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
@@ -27,7 +27,7 @@ digraph audio {
   }
 
   subgraph cluster_ThirdFreq {
-    label = "Major Third Frequency"
+    label = "Third Frequency"
 
     ThirdFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
     ThirdFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
@@ -52,7 +52,7 @@ digraph audio {
   }
 
   subgraph cluster_FifthFreq {
-    label = "Perfect Fifth Frequency"
+    label = "Fifth Frequency"
 
     FifthFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
     FifthFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
@@ -107,6 +107,7 @@ digraph audio {
   }
 
   FrequenciesMixer [label="Mixer", shape="box"]
+  StartStopGain [label="Start/Stop Note Gain", shape="trapezium"]
   LfoApplyGain [label="LFO Application Gain", shape="trapezium"]
   OverallVolumeGain [label="Volume Gain", shape="trapezium", comment="Gain based on overall volume"]
 
@@ -114,7 +115,8 @@ digraph audio {
   ThirdFreqOverallGain -> FrequenciesMixer
   FifthFreqOverallGain -> FrequenciesMixer
 
-  FrequenciesMixer -> LfoApplyGain [taillabel = "Audio"]
+  FrequenciesMixer -> StartStopGain
+  StartStopGain -> LfoApplyGain [taillabel = "Audio"]
   LfoMixer -> LfoApplyGain [taillabel = "Gain Param", style=dashed]
 
   LfoApplyGain -> ReverbConvolver

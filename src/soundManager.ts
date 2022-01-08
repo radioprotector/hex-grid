@@ -1,5 +1,76 @@
 import { scaleNumericValue, clamp } from './store';
 
+// enum Chord {
+//   Imaj,    // Major
+//   ii,   // Minor
+//   iii,  // Minor
+//   IV,   // Major
+//   V,    // Major
+//   vi,   // Minor
+//   viidim
+// }
+
+// const enum Triad {
+//   Major,
+//   Minor,
+//   Augmented,
+//   Diminished
+// }
+
+type TriadSemitones = [root: number, third: number, fifth: number];
+
+const MajorTriadSemitones: TriadSemitones = [0, 4, 7];
+const MinorTriadSemitones: TriadSemitones = [0, 3, 7];
+const AugmentedTriadSemitones: TriadSemitones = [0, 4, 8];
+const DiminishedTriadSemitones: TriadSemitones = [0, 3, 6];
+
+type MajorScaleChords = 'I Maj' | 'II min' | 'III min' | 'IV Maj' | 'V Maj' | 'VI min' | 'VII dim';
+type MinorScaleChords = 'I min' | 'II dim' | 'bIII Aug' | 'IV min' | 'bVI Maj' | 'bVII Maj' | 'VII dim' | 'III Maj';
+type Chord = MajorScaleChords | MinorScaleChords;
+
+/**
+ * Maps specific chords to the number of semitones from the root/"base" frequency as well as the chord-specific semitones.
+ */
+const ChordTones: { [chord in Chord]: [number, TriadSemitones]  } = {
+  // Start with the major scale
+  'I Maj':    [0,   MajorTriadSemitones],
+  'II min':   [2,   MinorTriadSemitones],
+  'III min':  [4,   MinorTriadSemitones],
+  'IV Maj':   [5,   MajorTriadSemitones],
+  'V Maj':    [7,   MajorTriadSemitones],
+  'VI min':   [9,   MinorTriadSemitones],
+  'VII dim':  [11,  DiminishedTriadSemitones],
+  // Add the minor scale
+  'I min':    [0,   MinorTriadSemitones],
+  'II dim':   [2,   DiminishedTriadSemitones],
+  'bIII Aug': [3,   AugmentedTriadSemitones],
+  'IV min':   [5,   MinorTriadSemitones],
+  'bVI Maj':  [8,   MajorTriadSemitones],
+  'bVII Maj': [10,  MajorTriadSemitones],
+  'III Maj':  [4,   MajorTriadSemitones]
+};
+
+/**
+ * Maps individual named chord progressions to specific lists of chords.
+ */
+const ChordProgressions: { [name: string]: Chord[] } = {
+  'Awesome-1': ['I Maj', 'V Maj', 'VI min', 'IV Maj'],
+  'Awesome-2': ['V Maj', 'VI min', 'IV Maj', 'I Maj'],
+  'Awesome-3': ['VI min', 'IV Maj', 'I Maj', 'V Maj'],
+  'Awesome-4': ['IV Maj', 'I Maj', 'V Maj', 'VI min'],
+  'Awesome-5': ['I Maj', 'V Maj', 'bVII Maj', 'IV Maj'],
+  'Fifties': ['I Maj', 'VI min', 'IV Maj', 'V Maj'],
+  'Circle': ['VI min', 'II min', 'V Maj', 'I Maj'],
+  'Three-Chord-1': ['V Maj', 'I Maj', 'IV Maj'],
+  'Three-Chord-2': ['I Maj', 'V Maj', 'IV Maj', 'V Maj'],
+  'Three-Chord-3': ['V Maj', 'IV Maj', 'I Maj'],
+  'Three-Chord-4': ['I Maj', 'VI min', 'V Maj'],
+  'Three-Chord-5': ['I Maj', 'II min', 'V Maj'],
+  'Pachelbel': ['I Maj', 'V Maj', 'VI min', 'III min', 'IV Maj', 'I Maj', 'IV Maj', 'V Maj']
+};
+
+const AllProgressions: string[] = Object.keys(ChordProgressions);
+
 /**
  * Describes a collection of waveform-specific nodes, all of a particular type.
  */
@@ -104,11 +175,9 @@ function createOscillators(context: AudioContext, semitones: number | undefined 
   sine.frequency.setValueAtTime(440, context.currentTime);
 
   if (semitones !== undefined) {
-    const centsPerSemitone = Math.pow(2, 1/12);
-
-    square.detune.setValueAtTime(centsPerSemitone * semitones, context.currentTime);
-    sawtooth.detune.setValueAtTime(centsPerSemitone * semitones, context.currentTime);
-    sine.detune.setValueAtTime(centsPerSemitone * semitones, context.currentTime);
+    square.detune.setValueAtTime(100 * semitones, context.currentTime);
+    sawtooth.detune.setValueAtTime(100 * semitones, context.currentTime);
+    sine.detune.setValueAtTime(100 * semitones, context.currentTime);
   }
 
   return {
@@ -343,6 +412,25 @@ function assignWaveformFrequency(frequency: number, atTime: number, ...chains: (
 }
 
 /**
+ * Updates all oscillator nodes in the provided chains to use the specified detune value.
+ * @param detune The detune amount to use, in cents of a semitone.
+ * @param atTime The time at which to assign the detune value.
+ * @param chains The chains containing the oscillator nodes to update.
+ */
+function assignWaveformDetune(detune: number, atTime: number, ...chains: (FrequencyOscillatorChain | null)[]): void {
+  for (let chain of chains) {
+    // Skip over nulls
+    if (chain === null) {
+      continue;
+    }
+
+    chain.oscillators.square.detune.setValueAtTime(detune, atTime);
+    chain.oscillators.sawtooth.detune.setValueAtTime(detune, atTime);
+    chain.oscillators.sine.detune.setValueAtTime(detune, atTime);
+  }
+}
+
+/**
  * Updates all waveform-specific gain nodes in the provided chains to use the indicated waveform-specific gain levels.
  * @param square The gain level to use for square waveforms.
  * @param sawtooth The gain level to use for sawtooth waveforms.
@@ -396,19 +484,25 @@ export class SoundManager {
   private audioContext: AudioContext | null = null;
 
   /**
-   * The node chain to use for the base frequency.
+   * The node chain to use for the root/"base" frequency.
    */
-  private baseFrequencyChain: FrequencyOscillatorChain | null = null;
+  private rootFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
-   * The node chain to use for the major third frequency.
+   * The node chain to use for the third frequency.
    */
   private thirdFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
-   * The node chain to use for the perfect fifth frequency.
+   * The node chain to use for the fifth frequency.
    */
   private fifthFrequencyChain: FrequencyOscillatorChain | null = null;
+
+  /**
+   * The gain node used to start/stop all oscillator output, as oscillators cannot be re-started once stopped.
+   * This is used to provide discrete notes in chord progressions without.
+   */
+  private startStopGainNode: GainNode | null = null;
 
   /**
    * The node chain to use for the LFO effect.
@@ -447,6 +541,11 @@ export class SoundManager {
    */
   private overallVolumeGain: number = 0.1; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
+  /**
+   * The time the next chord progression will end.
+   */
+  private nextProgressionEndTime: number = 0;
+
   private initializeAudioStructure(): void {
     // Don't do this more than once
     if (this.structureInitialized) {
@@ -458,19 +557,23 @@ export class SoundManager {
     }
 
     // Set up the frequency chains
-    this.baseFrequencyChain = createOscillatorStructure(this.audioContext);
+    this.rootFrequencyChain = createOscillatorStructure(this.audioContext);
     this.thirdFrequencyChain = createOscillatorStructure(this.audioContext, 4);
     this.fifthFrequencyChain = createOscillatorStructure(this.audioContext, 7);
 
     // Create an overall mixer between the various frequency chains
     const chainsMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 3, channelCount: 1 });
-    this.baseFrequencyChain.output.connect(chainsMixer);
+    this.rootFrequencyChain.output.connect(chainsMixer);
     this.thirdFrequencyChain.output.connect(chainsMixer);
     this.fifthFrequencyChain.output.connect(chainsMixer);
 
-    // Create the LFO chain and ensure the mixed frequency chains funnel into it
+    // Create a start/stop node
+    this.startStopGainNode = new GainNode(this.audioContext);
+    chainsMixer.connect(this.startStopGainNode);
+
+    // Create the LFO chain and ensure the start/stop node funnels into it
     this.lfoChain = createLfoStructure(this.audioContext, this.lfoFrequency, this.lfoGain);
-    chainsMixer.connect(this.lfoChain.lfoOutput);
+    this.startStopGainNode.connect(this.lfoChain.lfoOutput);
 
     // Feed the LFO output into the reverb structure
     this.reverbChain = createReverbStructure(this.audioContext, this.reverbGain, this.lfoChain.lfoOutput);
@@ -489,7 +592,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_08_Warm_Square')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'square', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'square', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving square wavetable', reason);
@@ -498,7 +601,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_06_Warm_Saw')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving saw wavetable', reason);
@@ -507,7 +610,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_Celeste')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'sine', this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'sine', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving sine wavetable', reason);
@@ -608,7 +711,7 @@ export class SoundManager {
       greenSawComponent,
       blueSineComponent,
       this.audioContext!.currentTime,
-      this.baseFrequencyChain,
+      this.rootFrequencyChain,
       this.thirdFrequencyChain,
       this.fifthFrequencyChain);
   }
@@ -640,9 +743,85 @@ export class SoundManager {
     assignWaveformFrequency(
       frequency,
       this.audioContext!.currentTime,
-      this.baseFrequencyChain,
+      this.rootFrequencyChain,
       this.thirdFrequencyChain,
       this.fifthFrequencyChain);
+  }
+
+  /**
+   * Queues a chord progression and schedules the next time the progression should 
+   */
+  private queueChordProgression(): void {
+    // Make sure we have audio context
+    if (this.audioContext === null || this.startStopGainNode === null || !this.structureInitialized) {
+      return;
+    }
+
+    const LOOKAHEAD_SEC = 0.5;
+    const LOOKAHEAD_MS = 0.5 * 1000;
+    const CHORD_LENGTH_SEC = 1.6;
+    const CHORD_DECAY_SEC = CHORD_LENGTH_SEC / 4;
+    const REST_SEC = CHORD_LENGTH_SEC / 4;
+
+    // See if there's anything we really want to bother with at this stage - if not,
+    // queue up a check later on
+    if (this.nextProgressionEndTime - LOOKAHEAD_SEC > this.audioContext.currentTime) {
+      setTimeout(() => { this.queueChordProgression(); }, LOOKAHEAD_MS);
+
+      return;
+    }
+
+    // Choose a random chord to play
+    let progressionIndex = Math.floor(Math.random() * AllProgressions.length);
+    let progressionName = AllProgressions[progressionIndex];
+    let chordsList = ChordProgressions[progressionName];
+    let currentTime = this.nextProgressionEndTime;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`playing ${progressionName}`);
+    }
+
+    for(let chord of chordsList) {
+      // First ensure that the start/stop gain is set to "start" at the beginning of this progression
+      this.startStopGainNode.gain.setValueAtTime(1, currentTime);
+
+      // Pull the root semitones and the chord-specific tones
+      const [rootSemitones, chordTones] = ChordTones[chord];
+
+      // const centsPerSemitone = Math.pow(2, 1/12);
+      assignWaveformDetune((rootSemitones + chordTones[0]) * 100, currentTime, this.rootFrequencyChain);
+      assignWaveformDetune((rootSemitones + chordTones[1]) * 100, currentTime, this.thirdFrequencyChain);
+      assignWaveformDetune((rootSemitones + chordTones[2]) * 100, currentTime, this.fifthFrequencyChain);
+
+      // // Calculate the detune cents
+      // const sharedDetuneCents = Math.pow(2, rootSemitones/12) * 100;
+      // const rootDetuneCents = Math.pow(2, chordTones[0]/12) * 100;
+      // const thirdDetuneCents = Math.pow(2, chordTones[1]/12) * 100;
+      // const fifthDetuneCents = Math.pow(2, chordTones[2]/12) * 100;
+
+      // // Apply to the oscillator chains
+      // assignWaveformDetune(sharedDetuneCents + rootDetuneCents, currentTime, this.rootFrequencyChain);
+      // assignWaveformDetune(sharedDetuneCents + thirdDetuneCents, currentTime, this.thirdFrequencyChain);
+      // assignWaveformDetune(sharedDetuneCents + fifthDetuneCents, currentTime, this.fifthFrequencyChain);
+
+      // Increment the song length and decay the start/stop gain to "stop"
+      currentTime += CHORD_LENGTH_SEC;
+      this.startStopGainNode.gain.setTargetAtTime(0, currentTime, CHORD_DECAY_SEC);
+
+      // Then advance past the decay and rest
+      currentTime += CHORD_DECAY_SEC;
+      currentTime += REST_SEC;
+    }
+
+
+    // Now update the marker to reflect the end of this chord progression
+    const chordDuration = currentTime - this.nextProgressionEndTime;
+    this.nextProgressionEndTime = currentTime;
+
+    // Queue up the next progression
+    setTimeout(() => {
+      this.queueChordProgression();
+    }, Math.max(LOOKAHEAD_MS, (1000 * chordDuration) - LOOKAHEAD_MS));
   }
 
   /**
@@ -658,7 +837,7 @@ export class SoundManager {
       this.cascadeSaturationToAudioNodes();
 
       // Start all of the oscillators in the frequency chain
-      startOscillators(this.baseFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+      startOscillators(this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
 
       // Ensure the LFO chain is also initialized
       if (this.lfoChain !== null) {
@@ -667,6 +846,7 @@ export class SoundManager {
     }
 
     this.audioContext.resume();
+    this.queueChordProgression();
   }
 
   /**
