@@ -2,6 +2,7 @@ import { useAppSelector } from "../hooks";
 
 function DragGuideIcon(): JSX.Element {
   const baseHue = useAppSelector((state) => state.color.hue);
+  const hueStepScaling = useAppSelector((state) => state.hexGrid.colorScaling.hue);
 
   return (
     <svg
@@ -51,11 +52,11 @@ function DragGuideIcon(): JSX.Element {
         >
           <stop
             offset="0"
-            style={{"stopColor": `hsl(${baseHue - 120},70%,50%)`}}
+            style={{"stopColor": `hsl(${baseHue - (hueStepScaling * 15)},70%,50%)`}}
           />
           <stop
             offset="0.25"
-            style={{"stopColor": `hsl(${baseHue - 60},70%,50%)`}}
+            style={{"stopColor": `hsl(${baseHue - (hueStepScaling * 8)},70%,50%)`}}
           />
           <stop
             offset="0.5"
@@ -63,11 +64,11 @@ function DragGuideIcon(): JSX.Element {
           />
           <stop
             offset="0.75"
-            style={{"stopColor": `hsl(${baseHue + 60},70%,50%)`}}
+            style={{"stopColor": `hsl(${baseHue + (hueStepScaling * 8)},70%,50%)`}}
           />
           <stop
             offset="1"
-            style={{"stopColor": `hsl(${baseHue + 120},70%,50%)`}}
+            style={{"stopColor": `hsl(${baseHue + (hueStepScaling * 15)},70%,50%)`}}
           />
         </linearGradient>
         <linearGradient

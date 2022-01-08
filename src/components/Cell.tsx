@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Hex } from 'honeycomb-grid';
 
-import { selectIsCenter, clamp } from '../store';
+import { clamp } from '../store';
 import { useAppSelector } from '../hooks';
 
 function Cell(props: { hex: Hex<any> }): JSX.Element {
@@ -40,7 +40,7 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
   let strokeWidth = 1;
   let strokeOpacity = 0.15;
 
-  if (selectIsCenter(centerCoord, props.hex)) {
+  if (props.hex.equals(centerCoord)) {
     strokeWidth = 2;
     strokeOpacity = 0.5;
     stroke = 'black';
