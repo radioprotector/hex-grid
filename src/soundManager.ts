@@ -819,7 +819,6 @@ export class SoundManager {
     }
 
     // Now update the marker to reflect the end of this chord progression
-    const chordDuration = currentTime - this.nextChordProgressionEndTime;
     this.nextChordProgressionEndTime = currentTime;
 
     // Queue up the next progression
