@@ -1,8 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { defineGrid, extendHex, HexFactory, PointLike } from "honeycomb-grid";
+import { defineGrid, extendHex, HexFactory, PointLike, CubeCoordinates } from "honeycomb-grid";
 
 /**
- * THe arguments used to customize the hex factory and propagated throughout the stack.
+ * The arguments used to customize the hex factory and propagated throughout the stack.
  */
 export interface HexArgs {
   orientation: 'flat',
@@ -13,6 +13,26 @@ export interface HexArgs {
 export interface Size {
   width: number,
   height: number
+}
+
+/**
+ * Describes the scaling factors that are used for different color components.
+ */
+export interface ColorScaling {
+  /**
+   * The scaling factor used for the hue component.
+   */
+  hue: number,
+
+  /**
+   * The scaling factor used for the saturation component.
+   */
+  saturation: number,
+
+  /**
+   * The scaling factor used for the lightness component.
+   */
+  lightness: number
 }
 
 export interface HexGridState {
@@ -47,7 +67,17 @@ export interface HexGridState {
   /**
    * The Cartesian coordinates for the hex at the center of the grid.
    */
-  centerCoord: PointLike // XXX: Good memoization candidate if it can be easily shared across all Cell component instances (and the Grid component)
+  centerCoord: PointLike, // XXX: Good memoization candidate if it can be easily shared across all Cell component instances (and the Grid component)
+
+  /**
+   * The cubic coordinates for the hex at the center of the grid.
+   */
+  centerCoordCube: CubeCoordinates, // XXX: Good memoization candidate if it can be easily shared across all Cell component instances (and the Grid component)
+
+  /**
+   * The scaling to use for display and panning.
+   */
+  colorScaling: ColorScaling
 }
 
 /**
@@ -102,7 +132,7 @@ function getStateForScreen(): HexGridState {
     baseHexSize = 60;
   }
 
-  // Construct a hex factory just so we can get the corner string
+  // Construct a hex factory so we can get the corner string and calculate coordinates for the center
   const hexFactory = getHexFactory(baseHexSize);
   
   // Calculate the correct number of columns and rows using flat-topped coordinates:
@@ -114,10 +144,19 @@ function getStateForScreen(): HexGridState {
   const cellColumns = Math.floor(screenWidth / (cellWidth * 0.75)) + 2;
   const cellRows = Math.floor(screenHeight / cellHeight) + 3;
 
-  // Calculate the center coordinate
+  // Calculate the center coordinate in both Cartesian and cubic formats
   const centerCoord: PointLike = {
     x: Math.floor(cellColumns / 2.0),
     y: Math.floor(cellRows / 2.0)
+  };
+
+  const centerCoordCube = hexFactory(centerCoord).cube();
+
+  // Calculate the scaling factors
+  const colorScaling: ColorScaling = {
+    hue: 6,
+    lightness: 3,
+    saturation: 4
   };
 
   // Generate the state and log
@@ -136,7 +175,9 @@ function getStateForScreen(): HexGridState {
     },
     cellPointsString: getCornerPointsString(hexFactory),
     baseHexSize,
-    centerCoord
+    centerCoord,
+    centerCoordCube,
+    colorScaling
   }
 
   if (process.env.NODE_ENV !== 'production') {

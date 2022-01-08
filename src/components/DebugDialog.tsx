@@ -6,6 +6,7 @@ function DebugDialog(): JSX.Element {
   const screenDimensions = useAppSelector((state) => state.hexGrid.screenDimensions);
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
   const centerCoord = useAppSelector((state) => state.hexGrid.centerCoord);
+  const centerCoordCube = useAppSelector((state) => state.hexGrid.centerCoordCube);
   const fontScale = parseFloat(window.getComputedStyle(document.body).fontSize) / 16.0;
   const pixelRatio = window.devicePixelRatio;
 
@@ -21,7 +22,10 @@ function DebugDialog(): JSX.Element {
         <dt>Grid</dt>
         <dd>{gridDimensions.width}x{gridDimensions.height}</dd>
         <dt>Center</dt>
-        <dd>({centerCoord.x},{centerCoord.y})</dd>
+        <dd>
+          Cart: ({centerCoord.x},{centerCoord.y})<br />
+          Cube: ({centerCoordCube.q},{centerCoordCube.r},{centerCoordCube.s})
+        </dd>
       </dl>
     </div>
   );
