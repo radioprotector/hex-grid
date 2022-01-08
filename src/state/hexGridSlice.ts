@@ -110,7 +110,10 @@ function getStateForScreen(): HexGridState {
     centerCoord
   }
 
-  console.debug(`Calculated dimensions`, { screen: state.screenDimensions, grid: state.gridDimensions, cell: state.cellDimensions });
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(`Calculated dimensions`, { screen: state.screenDimensions, grid: state.gridDimensions, cell: state.cellDimensions });
+  }
+  
   return state;
 }
 

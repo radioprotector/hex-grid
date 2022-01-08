@@ -120,7 +120,9 @@ function App(): JSX.Element {
       lastPannedClientX.current = currentClientX;
       lastPannedClientY.current = currentClientY;
   
-      console.log(`pan start: (${currentClientX}, ${currentClientY})`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`pan start: (${currentClientX}, ${currentClientY})`);
+      }
     }
 
     // Handle both touch/mouse events for panning
@@ -187,7 +189,9 @@ function App(): JSX.Element {
           angle += 360;
         }
   
-        console.log(`pan threshold met (angle: ${angle})`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`pan threshold met (angle: ${angle})`);
+        }
   
         // Now map the different axes (assuming 6 "chunks")
         if (angle <= 60) {
@@ -243,8 +247,10 @@ function App(): JSX.Element {
   // Add an effect to handle when we want to stop panning
   useEffect(() => {
     const handlePanEnd = (): void => {
-      if (isPanning) {
-        console.log('pan end');
+      if (process.env.NODE_ENV !== 'production') {
+        if (isPanning) {
+          console.log('pan end');
+        }
       }
   
       setIsPanning(false);

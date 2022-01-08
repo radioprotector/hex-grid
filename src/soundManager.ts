@@ -519,7 +519,6 @@ export class SoundManager {
       .then((buffer) => this.audioContext!.decodeAudioData(buffer))
       .then((audioData) => {
         if (this.reverbChain) {
-          console.debug('reverb chain initialized');
           this.reverbChain.reverbConvolver.buffer = audioData;
         }
       })
