@@ -796,7 +796,7 @@ export class SoundManager {
 
     // If chord progression is disabled, restore everything to "normal" and don't try to re-queue
     if (!this.isChordProgressionEnabled) {
-      // Ensure we're not trying to decay/rest any notes.
+      // Ensure we're not trying to attack/decay/rest any notes.
       this.startStopGainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
       this.startStopGainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
 
@@ -823,10 +823,15 @@ export class SoundManager {
     }
 
     // Choose a random chord to play
-    let progressionIndex = Math.floor(Math.random() * AllProgressions.length);
-    let progressionName = AllProgressions[progressionIndex];
+    const progressionIndex = Math.floor(Math.random() * AllProgressions.length);
+    const progressionName = AllProgressions[progressionIndex];
     let chordsList = ChordProgressions[progressionName];
     
+    // If the chord is short, double it
+    if (chordsList.length <= 3) {
+      chordsList = chordsList.concat(chordsList);
+    }
+
     // Determine the jumping-off point - unless we're super behind, this will be when the last chord ended.
     let currentTime = Math.max(this.nextChordProgressionEndTime, this.audioContext.currentTime);
 
@@ -836,7 +841,7 @@ export class SoundManager {
 
     for(let chord of chordsList) {
       // First ensure that the start/stop gain is set to "start" at the beginning of this progression
-      this.startStopGainNode.gain.setValueAtTime(1, currentTime);
+      this.startStopGainNode.gain.linearRampToValueAtTime(1, currentTime);
 
       // Pull the root semitones and the chord-specific tones
       const [rootSemitones, chordTones] = ChordTones[chord];
