@@ -76,6 +76,31 @@ digraph audio {
     FifthFreqMixer -> FifthFreqOverallGain
   }
 
+  subgraph cluster_SeventhFreq {
+    label = "Seventh Frequency"
+
+    SeventhFreqSquare [label="Sqr Osc", shape="circle", comment="Frequency based on lightness"]
+    SeventhFreqSawtooth [label="Saw Osc", shape="circle", comment="Frequency based on lightness"]
+    SeventhFreqSine [label="Sin Osc", shape="circle", comment="Frequency based on lightness"]
+
+    SeventhFreqSquareGain [label="Sqr Gain", shape="trapezium", comment="Gain based on hue"]
+    SeventhFreqSawtoothGain [label="Saw Gain", shape="trapezium", comment="Gain based on hue"]
+    SeventhFreqSineGain [label="Sin Gain", shape="trapezium", comment="Gain based on hue"]
+
+    SeventhFreqMixer [label="Mixer", shape="box"]
+    SeventhFreqOverallGain [label="Gain", shape="trapezium", comment="Gain based on saturation"]
+
+    SeventhFreqSquare -> SeventhFreqSquareGain
+    SeventhFreqSawtooth -> SeventhFreqSawtoothGain
+    SeventhFreqSine -> SeventhFreqSineGain
+
+    SeventhFreqSquareGain -> SeventhFreqMixer
+    SeventhFreqSawtoothGain -> SeventhFreqMixer
+    SeventhFreqSineGain -> SeventhFreqMixer
+
+    SeventhFreqMixer -> SeventhFreqOverallGain
+  }
+
   subgraph cluster_Lfo {
     label = "LFO"
 
@@ -114,6 +139,7 @@ digraph audio {
   BaseFreqOverallGain -> FrequenciesMixer
   ThirdFreqOverallGain -> FrequenciesMixer
   FifthFreqOverallGain -> FrequenciesMixer
+  SeventhFreqOverallGain -> FrequenciesMixer
 
   FrequenciesMixer -> StartStopGain
   StartStopGain -> LfoApplyGain [taillabel = "Audio"]

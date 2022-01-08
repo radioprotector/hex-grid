@@ -1,22 +1,34 @@
 import { scaleNumericValue, clamp } from './store';
 
-type TriadSemitones = [root: number, third: number, fifth: number];
+type ChordSemitones = [root: number, third: number, fifth: number, seventh: number];
 
-const MajorTriadSemitones: TriadSemitones = [0, 4, 7];
-const MinorTriadSemitones: TriadSemitones = [0, 3, 7];
-const AugmentedTriadSemitones: TriadSemitones = [0, 4, 8];
-const DiminishedTriadSemitones: TriadSemitones = [0, 3, 6];
+const MajorTriadSemitones: ChordSemitones = [0, 4, 7, 0];
+const MinorTriadSemitones: ChordSemitones = [0, 3, 7, 0];
+const AugmentedTriadSemitones: ChordSemitones = [0, 4, 8, 0];
+const DiminishedTriadSemitones: ChordSemitones = [0, 3, 6, 0];
 
-const DefaultSemitones: TriadSemitones = MajorTriadSemitones;
+const DominantSeventhSemitones: ChordSemitones = [0, 4, 7, 10];
+const MajorSeventhSemitones: ChordSemitones = [0, 4, 7, 11];
+const MinorSeventhSemitones: ChordSemitones = [0, 3, 7, 10];
+// const HalfDiminishedSeventhSemitones: ChordSemitones = [0, 3, 6, 10];
+// const DiminishedSeventhSemitones: ChordSemitones = [0, 3, 6, 9];
 
-type MajorScaleChords = 'I Maj' | 'II min' | 'III min' | 'IV Maj' | 'V Maj' | 'VI min' | 'VII dim';
-type MinorScaleChords = 'I min' | 'II dim' | 'bIII Aug' | 'IV min' | 'bVI Maj' | 'bVII Maj' | 'VII dim' | 'III Maj';
-type Chord = MajorScaleChords | MinorScaleChords;
+const DefaultSemitones: ChordSemitones = MajorTriadSemitones;
+
+type MajorTriadScaleChords = 'I Maj' | 'II min' | 'III min' | 'IV Maj' | 'V Maj' | 'VI min' | 'VII dim';
+type MinorTriadScaleChords = 'I min' | 'II dim' | 'bIII Aug' | 'IV min' | 'bVI Maj' | 'bVII Maj' | 'VII dim' | 'III Maj';
+type DominantSeventhScaleChords = 'I7' | 'II7' | 'III7' | 'IV7' | 'V7' | 'VI7' | 'VII7';
+type MajorSeventhScaleChords = 'I Maj7' | 'II Maj7' | 'III Maj7' | 'IV Maj7' | 'V Maj7' | 'VI Maj7' | 'VII Maj7';
+type MinorSeventhScaleChords = 'I min7' | 'II min7' | 'III min7' | 'IV min7' | 'V min7' | 'VI min7' | 'VII min7';
+// type HalfDiminishedSeventhScaleChords = 'I min7b5' | 'II min7b5' | 'III min7b5' | 'IV min7b5' | 'V min7b5' | 'VI min7b5' | 'VII min7b5';
+// type DiminishedSeventhScaleChords = 'I dim7' | 'II dim7' | 'III dim7' | 'IV dim7' | 'V dim7' | 'VI dim7' | 'VII dim7';
+
+type Chord = MajorTriadScaleChords | MinorTriadScaleChords | DominantSeventhScaleChords | MajorSeventhScaleChords | MinorSeventhScaleChords;
 
 /**
  * Maps specific chords to the number of semitones from the root/"base" frequency as well as the chord-specific semitones.
  */
-const ChordTones: { [chord in Chord]: [number, TriadSemitones]  } = {
+const ChordTones: { [chord in Chord]: [number, ChordSemitones]  } = {
   // Start with the major scale
   'I Maj':    [0,   MajorTriadSemitones],
   'II min':   [2,   MinorTriadSemitones],
@@ -32,7 +44,31 @@ const ChordTones: { [chord in Chord]: [number, TriadSemitones]  } = {
   'IV min':   [5,   MinorTriadSemitones],
   'bVI Maj':  [8,   MajorTriadSemitones],
   'bVII Maj': [10,  MajorTriadSemitones],
-  'III Maj':  [4,   MajorTriadSemitones]
+  'III Maj':  [4,   MajorTriadSemitones],
+  // Add the dominant seventh scale
+  'I7':       [0,   DominantSeventhSemitones],
+  'II7':      [2,   DominantSeventhSemitones],
+  'III7':     [4,   DominantSeventhSemitones],
+  'IV7':      [5,   DominantSeventhSemitones],
+  'V7':       [7,   DominantSeventhSemitones],
+  'VI7':      [9,   DominantSeventhSemitones],
+  'VII7':     [11,  DominantSeventhSemitones],
+  // Add the major seventh scale
+  'I Maj7':   [0,   MajorSeventhSemitones],
+  'II Maj7':  [2,   MajorSeventhSemitones],
+  'III Maj7': [4,   MajorSeventhSemitones],
+  'IV Maj7':  [5,   MajorSeventhSemitones],
+  'V Maj7':   [7,   MajorSeventhSemitones],
+  'VI Maj7':  [9,   MajorSeventhSemitones],
+  'VII Maj7': [11,  MajorSeventhSemitones],
+  // Add the minor seventh scale
+  'I min7':   [0,   MinorSeventhSemitones],
+  'II min7':  [2,   MinorSeventhSemitones],
+  'III min7': [4,   MinorSeventhSemitones],
+  'IV min7':  [5,   MinorSeventhSemitones],
+  'V min7':   [7,   MinorSeventhSemitones],
+  'VI min7':  [9,   MinorSeventhSemitones],
+  'VII min7': [11,  MinorSeventhSemitones],
 };
 
 /**
@@ -44,6 +80,7 @@ const ChordProgressions: { [name: string]: Chord[] } = {
   'Awesome-3': ['VI min', 'IV Maj', 'I Maj', 'V Maj'],
   'Awesome-4': ['IV Maj', 'I Maj', 'V Maj', 'VI min'],
   'Awesome-5': ['I Maj', 'V Maj', 'bVII Maj', 'IV Maj'],
+  'Awesome-6': ['I Maj', 'IV Maj', 'bVII Maj', 'IV Maj'],
   'Fifties': ['I Maj', 'VI min', 'IV Maj', 'V Maj'],
   'Circle': ['VI min', 'II min', 'V Maj', 'I Maj'],
   'Three-Chord-1': ['V Maj', 'I Maj', 'IV Maj'],
@@ -51,7 +88,10 @@ const ChordProgressions: { [name: string]: Chord[] } = {
   'Three-Chord-3': ['V Maj', 'IV Maj', 'I Maj'],
   'Three-Chord-4': ['I Maj', 'VI min', 'V Maj'],
   'Three-Chord-5': ['I Maj', 'II min', 'V Maj'],
-  'Pachelbel': ['I Maj', 'V Maj', 'VI min', 'III min', 'IV Maj', 'I Maj', 'IV Maj', 'V Maj']
+  'Pachelbel': ['I Maj', 'V Maj', 'VI min', 'III min', 'IV Maj', 'I Maj', 'IV Maj', 'V Maj'],
+  'Royal': ['IV Maj7', 'V7', 'III min7', 'VI min'],
+  'Royal-Extended': ['IV Maj7', 'V7', 'III min7', 'VI min', 'II min7', 'V7', 'I Maj'],
+  'MontyWard': ['I7', 'IV7', 'II min7', 'V7']
 };
 
 const AllProgressions: string[] = Object.keys(ChordProgressions);
@@ -509,6 +549,11 @@ export class SoundManager {
   private fifthFrequencyChain: FrequencyOscillatorChain | null = null;
 
   /**
+   * The node chain to use for the seventh frequency.
+   */
+  private seventhFrequencyChain: FrequencyOscillatorChain | null = null;
+
+  /**
    * The gain node used to start/stop all oscillator output, as oscillators cannot be re-started once stopped.
    * This is used to provide discrete notes in chord progressions without.
    */
@@ -584,12 +629,14 @@ export class SoundManager {
     this.rootFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[0]);
     this.thirdFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[1]);
     this.fifthFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[2]);
+    this.seventhFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[3]);
 
     // Create an overall mixer between the various frequency chains
     const chainsMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 3, channelCount: 1 });
     this.rootFrequencyChain.output.connect(chainsMixer);
     this.thirdFrequencyChain.output.connect(chainsMixer);
     this.fifthFrequencyChain.output.connect(chainsMixer);
+    this.seventhFrequencyChain.output.connect(chainsMixer);
 
     // Create a start/stop node
     this.startStopGainNode = new GainNode(this.audioContext);
@@ -616,7 +663,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_08_Warm_Square')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'square', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'square', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving square wavetable', reason);
@@ -625,7 +672,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_06_Warm_Saw')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving saw wavetable', reason);
@@ -634,7 +681,7 @@ export class SoundManager {
     fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_Celeste')
       .then((response) => response.json())
       .then((tableJson) => {
-        assignWaveformTable(this.audioContext, tableJson, 'sine', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+        assignWaveformTable(this.audioContext, tableJson, 'sine', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
       })
       .catch((reason) => {
         console.error('error retrieving sine wavetable', reason);
@@ -740,7 +787,8 @@ export class SoundManager {
       this.audioContext.currentTime,
       this.rootFrequencyChain,
       this.thirdFrequencyChain,
-      this.fifthFrequencyChain);
+      this.fifthFrequencyChain,
+      this.seventhFrequencyChain);
   }
 
   /**
@@ -757,6 +805,7 @@ export class SoundManager {
 
     this.thirdFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
     this.fifthFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
+    this.seventhFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
   }
 
   /**
@@ -779,7 +828,8 @@ export class SoundManager {
       false,
       this.rootFrequencyChain,
       this.thirdFrequencyChain,
-      this.fifthFrequencyChain);
+      this.fifthFrequencyChain,
+      this.seventhFrequencyChain);
   }
 
   /**
@@ -804,6 +854,7 @@ export class SoundManager {
       assignWaveformDetune(DefaultSemitones[0] * 100, this.audioContext.currentTime, true, this.rootFrequencyChain);
       assignWaveformDetune(DefaultSemitones[1] * 100, this.audioContext.currentTime, true, this.thirdFrequencyChain);
       assignWaveformDetune(DefaultSemitones[2] * 100, this.audioContext.currentTime, true, this.fifthFrequencyChain);
+      assignWaveformDetune(DefaultSemitones[3] * 100, this.audioContext.currentTime, true, this.seventhFrequencyChain);
 
       return;
     }
@@ -848,6 +899,7 @@ export class SoundManager {
       assignWaveformDetune((rootSemitones + chordTones[0]) * 100, currentTime, false, this.rootFrequencyChain);
       assignWaveformDetune((rootSemitones + chordTones[1]) * 100, currentTime, false, this.thirdFrequencyChain);
       assignWaveformDetune((rootSemitones + chordTones[2]) * 100, currentTime, false, this.fifthFrequencyChain);
+      assignWaveformDetune((rootSemitones + chordTones[3]) * 100, currentTime, false, this.seventhFrequencyChain);
 
       // Now move forward the clock by the chord's duration, and then decay the start/stop gain to "stop"
       currentTime += this.chordDurationSeconds;
@@ -883,7 +935,7 @@ export class SoundManager {
       this.cascadeSaturationToAudioNodes();
 
       // Start all of the oscillators in the frequency chain
-      startOscillators(this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain);
+      startOscillators(this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
 
       // Ensure the LFO chain is also initialized
       if (this.lfoChain !== null) {

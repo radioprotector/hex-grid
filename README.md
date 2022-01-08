@@ -34,15 +34,23 @@ The `SoundInterface` component provides the user-facing aspects of the audio beh
 
 The key audio sources for this structure are provided by oscillator "chains". Each chain consists of three separate oscillators, each with a different waveform type, and three corresponding gain nodes that allow for controlling which waveforms are heard for that chain. Furthermore, each chain ultimately terminates in a chain-specific gain node which allows for controlling how much that specific chain contributes to the overall mix.
 
-Three oscillator chains are set up. The first is tuned to the root frequency, the second is by default tuned to a major third of the root frequency (4 semitones), and the third is by defaulttuned to a perfect fifth of the root frequency (7 semitones). In addition, a sine-based LFO chain and reverb structure are applied to the combined result of these oscillator chains.
+Four oscillator chains are set up. The first is tuned to the root frequency, the second is by default tuned to a major third of the root frequency (4 semitones), the third is by default tuned to a perfect fifth of the root frequency (7 semitones), and the fourth is by default not used but available for seventh chords. In addition, a sine-based LFO chain and reverb structure are applied to the combined result of these oscillator chains.
 
 Various state properties control the output of the audio:
 
 - The **hue** of the color controls the relative gain levels of the waveforms.
-- The **saturation** of the color controls the gain levels of the third and fifth oscillator chains. (The gain level of the root frequency oscillator chain is not affected.)
+- The **saturation** of the color controls the gain levels of the third, fifth, and seventh oscillator chains. (The gain level of the root frequency oscillator chain is not affected.)
 - The **lightness** of the color controls the root frequency used across all waveform oscillators.
 
 To resolve concerns with auto-play blocking (including those that arise from async/Promise-based click handlers), as much initialization code as possible is synchronous and on-demand. While oscillator wavetables are still loaded asynchronously, placeholder "raw" oscillator types are set when the oscillators are initialized. For the reverb convolver, which also requires asynchronously loading the impulse responses, the reverb intensity is started at 0.
+
+### Chord Progressions
+
+When enabled, the sound manager will randomly select chord progressions to play through. When a chord progression is playing, the `detune` values of the oscillators, but not the base `frequency` values, will be modified to achieve the desired pitches.
+
+Chord progressions are defined in the `ChordProgressions` collection. Each of these consists of a list of `Chord` values. Each `Chord` value has a set number of semitones from the root frequency (applied across all oscillator chains), as well as a collection of oscillator-specific semitone values to individually apply to the root, third, fifth, and seventh frequency oscillator chains. When a particular oscillator chain is not in use, it is set to the same number of semitones as the root frequency.
+
+To play discrete notes without shutting off the oscillators (as oscillators cannot be re-started once stopped), the result of the mixed oscillator chains is fed through a "start/stop" gain node. When a chord is playing, its gain will be 1.0, but during rests, its gain will be 0.0.
 
 ## Assets
 
