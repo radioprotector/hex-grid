@@ -776,7 +776,7 @@ export class SoundManager {
     const LOOKAHEAD_SEC = 0.25;
     const LOOKAHEAD_MS = LOOKAHEAD_SEC * 1000;
     const CHORD_DECAY_SEC = this.chordDurationSeconds / 8;
-    const REST_SEC = this.chordDurationSeconds / 8;
+    const REST_SEC = this.chordDurationSeconds / 16;
 
     // See if there's anything we really want to bother with at this stage -
     // if not, queue up a check later on
