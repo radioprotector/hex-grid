@@ -89,7 +89,7 @@ function SoundInterface(): JSX.Element {
   return (
     <div
       id="audioPanel"
-      className={mainLightness <= 30 ? 'dark-contrast' : 'light-contrast'}
+      className={mainLightness <= 43 ? 'dark-contrast' : 'light-contrast'}
       onMouseDown={panInterceptor}
       onTouchStart={panInterceptor}
     >     
