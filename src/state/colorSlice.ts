@@ -1,8 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface ColorState {
+  /**
+   * The hue of the main color, on a 0-360 degree scale.
+   */
   hue: number,
+
+  /**
+   * The saturation of the main color, on a 0-100% scale.
+   */
   saturation: number,
+
+  /**
+   * The lightness of the main color, on a 0-100% scale.
+   */
   lightness: number
 }
 

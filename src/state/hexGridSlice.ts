@@ -16,12 +16,38 @@ export interface Size {
 }
 
 export interface HexGridState {
+  /**
+   * The current screen dimensions.
+   */
   screenDimensions: Size,
+
+  /**
+   * The grid dimensions.
+   */
   gridDimensions: Size,
+
+  /**
+   * The dimensions of each cell in the grid.
+   */
   cellDimensions: Size,
-  cellPointsString: string, // XXX: Good memoization candidate
+  
+  /**
+   * The string of points to use when rendering each SVG hexagon in the grid.
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/points}
+   */
+  cellPointsString: string, // XXX: Good memoization candidate if it can be easily shared across all Cell component instances
+
+  /**
+   * The base size used for each hexagon in the grid.
+   * This represents the distance from the center of the hex to each corner.
+   * @see {@link https://www.redblobgames.com/grids/hexagons/#size-and-spacing}
+   */
   baseHexSize: number,
-  centerCoord: PointLike // XXX: Good memoization candidate
+
+  /**
+   * The Cartesian coordinates for the hex at the center of the grid.
+   */
+  centerCoord: PointLike // XXX: Good memoization candidate if it can be easily shared across all Cell component instances (and the Grid component)
 }
 
 /**
@@ -39,6 +65,9 @@ function getHexFactory(baseHexSize: number): HexFactory<HexArgs> {
 
 /**
  * Gets a string of points suitable for use in defining each SVG hexagon.
+ * @param hexFactory The configured hex factory used for the grid.
+ * @returns The resulting SVG points string.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/points}
  */
 function getCornerPointsString(hexFactory: HexFactory<HexArgs>): string {
   return hexFactory()
