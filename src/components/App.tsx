@@ -5,12 +5,14 @@ import { useAppDispatch, useAppSelector } from "../hooks";
 import './App.css';
 import Grid from './Grid';
 import SoundInterface from "./SoundInterface";
+import ColorCycler from "./ColorCycler";
 import ColorChangeHandler from './ColorChangeHandler';
 import DragGuideIcon from "./DragGuideIcon";
 import DebugDialog from "./DebugDialog";
 
 function App(): JSX.Element {
   const dispatch = useAppDispatch();
+  const mainLightness = useAppSelector((state) => state.color.lightness);
   const baseHexSize = useAppSelector((state) => state.hexGrid.baseHexSize);
   const colorScaling = useAppSelector((state)  => state.hexGrid.colorScaling);
   const [isPanning, setIsPanning] = useState(false);
@@ -271,6 +273,7 @@ function App(): JSX.Element {
   return (
     <div
       style={{'cursor': isPanning ? 'grabbing' : 'grab'}}
+      className={mainLightness <= 43 ? 'dark-contrast' : 'light-contrast'}
     >
       {/* Because this intercepts touch events, we always want to have it visible. */}
       <div
@@ -280,6 +283,7 @@ function App(): JSX.Element {
       </div>
       <Grid />
       <SoundInterface />
+      <ColorCycler />
       <ColorChangeHandler />
       {/* Only include debugging information in dev builds */
         process.env.NODE_ENV !== 'production'

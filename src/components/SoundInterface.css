@@ -16,53 +16,5 @@
 }
 
 #audioPanel button {
-  display: inline-block;
   min-width: 40%;
-  height: 2em;
-  padding: 0.25em 0.5em;
-  font-size: 0.9em;
-  white-space: nowrap;
-  border-width: 1px;
-  border-radius: 0.25em;
-}
-
-#audioPanel .feather {
-  width: 0.9em;
-  height: 0.9em;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-
-  padding-right: 0.5em;
-  vertical-align: middle;
-}
-
-/* Apply appropriate contrasting color styles when necessary */
-#audioPanel.dark-contrast {
-  color: white;
-}
-
-#audioPanel.dark-contrast .feather {
-  stroke: white;
-}
-
-#audioPanel.dark-contrast button {
-  background-color: #111;
-  border-color: #333;
-  color: white;
-}
-
-#audioPanel.light-contrast {
-  color: black;
-}
-
-#audioPanel.light-contrast .feather {
-  stroke: black;
-}
-
-#audioPanel.light-contrast button {
-  background-color: #eee;
-  border-color: #ccc;
-  color: black;
 }

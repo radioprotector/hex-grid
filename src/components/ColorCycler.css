@@ -1,0 +1,12 @@
+#cyclerPanel {
+  position: fixed;
+  bottom: 5vh;
+  right: 5vw;
+  z-index: 20;
+  max-width: 90vw;
+  user-select: none;
+}
+
+#cyclerPanel button {
+  min-width: 40%;
+}
