@@ -3,6 +3,9 @@ import './DebugDialog.css';
 import { useAppSelector } from '../hooks';
 
 function DebugDialog(): JSX.Element {
+  const mainHue = useAppSelector((state) => state.color.hue);
+  const mainSaturation = useAppSelector((state) => state.color.saturation);
+  const mainLightness = useAppSelector((state) => state.color.lightness);
   const screenDimensions = useAppSelector((state) => state.hexGrid.screenDimensions);
   const gridDimensions = useAppSelector((state) => state.hexGrid.gridDimensions);
   const centerCoord = useAppSelector((state) => state.hexGrid.centerCoord);
@@ -26,6 +29,8 @@ function DebugDialog(): JSX.Element {
           Cart: ({centerCoord.x},{centerCoord.y})<br />
           Cube: ({centerCoordCube.q},{centerCoordCube.r},{centerCoordCube.s})
         </dd>
+        <dt>Color</dt>
+        <dd>({mainHue},{mainSaturation}%,{mainLightness}%)</dd>
       </dl>
     </div>
   );
