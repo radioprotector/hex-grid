@@ -59,7 +59,7 @@ function ColorCycler(): JSX.Element {
       >
         <svg
           className="feather">
-          <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isCycling) ? 'pause-circle' : 'play-circle')} />
+          <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isCycling) ? 'stop-circle' : 'play-circle')} />
         </svg>
         {isCycling ? "Stop Cycling" : "Start Cycling"}
       </button>
