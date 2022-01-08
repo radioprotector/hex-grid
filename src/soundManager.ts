@@ -159,7 +159,7 @@ function createOscillators(context: AudioContext, semitones: number | undefined 
   sawtooth.frequency.setValueAtTime(440, context.currentTime);
   sine.frequency.setValueAtTime(440, context.currentTime);
 
-  if (semitones !== undefined) {
+  if (semitones !== undefined && semitones !== 0) {
     square.detune.setValueAtTime(100 * semitones, context.currentTime);
     sawtooth.detune.setValueAtTime(100 * semitones, context.currentTime);
     sine.detune.setValueAtTime(100 * semitones, context.currentTime);
@@ -381,13 +381,21 @@ function assignWaveformTable(context: AudioContext | null, wavetableJson: any, t
  * Updates all oscillator nodes in the provided chains to use the specified frequency.
  * @param frequency The frequency to use.
  * @param atTime The time at which to assign the frequency.
+ * @param cancelSchedules If true, will cancel other changes scheduled for the frequency value.
  * @param chains The chains containing the oscillator nodes to update.
  */
-function assignWaveformFrequency(frequency: number, atTime: number, ...chains: (FrequencyOscillatorChain | null)[]): void {
+function assignWaveformFrequency(frequency: number, atTime: number, cancelSchedules: boolean, ...chains: (FrequencyOscillatorChain | null)[]): void {
   for (let chain of chains) {
     // Skip over nulls
     if (chain === null) {
       continue;
+    }
+
+    // Cancel scheduled frequency changes if specified
+    if (cancelSchedules) {
+      chain.oscillators.square.frequency.cancelScheduledValues(atTime);
+      chain.oscillators.sawtooth.frequency.cancelScheduledValues(atTime);
+      chain.oscillators.sine.frequency.cancelScheduledValues(atTime);
     }
 
     chain.oscillators.square.frequency.setValueAtTime(frequency, atTime);
@@ -400,17 +408,18 @@ function assignWaveformFrequency(frequency: number, atTime: number, ...chains: (
  * Updates all oscillator nodes in the provided chains to use the specified detune value.
  * @param detune The detune amount to use, in cents of a semitone.
  * @param atTime The time at which to assign the detune value.
- * @param cancel If true, will cancel other changes scheduled for the detune value.
+ * @param cancelSchedules If true, will cancel other changes scheduled for the detune value.
  * @param chains The chains containing the oscillator nodes to update.
  */
-function assignWaveformDetune(detune: number, atTime: number, cancel: boolean, ...chains: (FrequencyOscillatorChain | null)[]): void {
+function assignWaveformDetune(detune: number, atTime: number, cancelSchedules: boolean, ...chains: (FrequencyOscillatorChain | null)[]): void {
   for (let chain of chains) {
     // Skip over nulls
     if (chain === null) {
       continue;
     }
 
-    if (cancel) {
+    // Cancel scheduled detunes if specified
+    if (cancelSchedules) {
       chain.oscillators.square.detune.cancelScheduledValues(atTime);
       chain.oscillators.sawtooth.detune.cancelScheduledValues(atTime);
       chain.oscillators.sine.detune.cancelScheduledValues(atTime);
@@ -455,8 +464,17 @@ function setWetDryBalance(wetNode: GainNode, dryNode: GainNode, wetGain: number,
   dryNode.gain.setValueAtTime(1.0 - wetGain, atTime);
 }
 
+/**
+ * Handles sound output based on an HSL color value and other configurable parameters.
+ */
 export class SoundManager {
 
+  /**
+   * Initializes a new instance of SoundManager.
+   * @param hue The initial hue value to use, on a 0-360 degree scale.
+   * @param saturation The initial saturation value to use, on a 0-100% scale.
+   * @param lightness The initial lightness value to use, on a 0-100% scale.
+   */
   constructor(
     private hue: number,
     private saturation: number,
@@ -548,6 +566,10 @@ export class SoundManager {
    */
   private chordDurationSeconds = 2; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
+  /**
+   * Initializes the structure for the audio processing, including all relevant oscillator nodes,
+   * but does not start the nodes.
+   */
   private initializeAudioStructure(): void {
     // Don't do this more than once
     if (this.structureInitialized) {
@@ -632,6 +654,9 @@ export class SoundManager {
       });
   }
 
+  /**
+   * Cascades the current hue value to the oscillator-specific gain nodes in proportion to the corresponding red/blue/green values.
+   */
   private cascadeHueToAudioNodes(): void {
     // Don't do anything if we don't have an audio context yet
     if (this.audioContext === null) {
@@ -712,12 +737,15 @@ export class SoundManager {
       redSquareComponent,
       greenSawComponent,
       blueSineComponent,
-      this.audioContext!.currentTime,
+      this.audioContext.currentTime,
       this.rootFrequencyChain,
       this.thirdFrequencyChain,
       this.fifthFrequencyChain);
   }
 
+  /**
+   * Cascades the current saturation value to the gain of all chord nodes.
+   */
   private cascadeSaturationToAudioNodes(): void {
     // Don't do anything if we don't have an audio context yet
     if (this.audioContext === null) {
@@ -731,6 +759,9 @@ export class SoundManager {
     this.fifthFrequencyChain?.output.gain.setValueAtTime(chordGains, this.audioContext!.currentTime);
   }
 
+  /**
+   * Cascades the current lightness value to the frequency of all oscillator nodes.
+   */
   private cascadeLightnessToAudioNodes(): void {
     // Don't do anything if we don't have an audio context yet
     if (this.audioContext === null) {
@@ -744,16 +775,20 @@ export class SoundManager {
 
     assignWaveformFrequency(
       frequency,
-      this.audioContext!.currentTime,
+      this.audioContext.currentTime,
+      false,
       this.rootFrequencyChain,
       this.thirdFrequencyChain,
       this.fifthFrequencyChain);
   }
 
   /**
-   * Queues a chord progression and schedules the next time the progression should 
+   * Queues a chord progression and schedules the next time queueChordProgression should be called.
    */
   private queueChordProgression(): void {
+    // FUTURE: Consider restructuring this such that it will only schedule single chords, instead of full progressions.
+    // This would allow for changes in the chord duration to apply much sooner.
+
     // Make sure we have audio context
     if (this.audioContext === null || this.startStopGainNode === null || !this.structureInitialized) {
       return;
@@ -907,7 +942,7 @@ export class SoundManager {
    * Changes the reverb intensity.
    * @param intensity The reverb intensity, on a 0.0-1.0 scale.
    */
-   public changeReverbIntensity(intensity: number) {
+   public changeReverbIntensity(intensity: number): void {
     this.reverbGain = clamp(intensity, 0.0, 1.0);
 
     // Don't do anything else if we don't have audio in place yet
@@ -922,7 +957,7 @@ export class SoundManager {
    * Changes the LFO intensity.
    * @param intensity The LFO intensity, on a 0.0-1.0 scale.
    */
-  public changeLfoIntensity(intensity: number) {
+  public changeLfoIntensity(intensity: number): void {
     this.lfoGain = clamp(intensity, 0.0, 1.0);
 
     // Don't do anything else if we don't have audio in place yet
@@ -937,7 +972,7 @@ export class SoundManager {
    * Changes the LFO frequency.
    * @param frequency The LFO frequency, on a 1-30 Hz scale.
    */
-  public changeLfoFrequency(frequency: number) {
+  public changeLfoFrequency(frequency: number): void {
     this.lfoFrequency = clamp(frequency, 1, 30);
 
     // Don't do anything else if we don't have audio in place yet
@@ -952,7 +987,7 @@ export class SoundManager {
    * Changes whether automated chord progression is enabled.
    * @param isEnabled Whether or not chord progression is enabled.
    */
-  public changeChordProgression(isEnabled: boolean) {
+  public changeChordProgression(isEnabled: boolean): void {
     // See if we're materially changing. If so, queue up further checks.
     if (this.isChordProgressionEnabled !== isEnabled) {
       this.isChordProgressionEnabled = isEnabled;
@@ -964,7 +999,7 @@ export class SoundManager {
    * Change the duration for further chords progression.
    * @param durationSeconds The amount of time to spend on each chord, in seconds ranging from 0.25 to 10.
    */
-  public changeChordDuration(durationSeconds: number) {
+  public changeChordDuration(durationSeconds: number): void {
     this.chordDurationSeconds = clamp(durationSeconds, 0.25, 10);
   }
 }
