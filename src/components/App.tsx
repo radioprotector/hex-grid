@@ -273,7 +273,7 @@ function App(): JSX.Element {
   return (
     <div
       style={{'cursor': isPanning ? 'grabbing' : 'grab'}}
-      className={mainLightness <= 43 ? 'dark-contrast' : 'light-contrast'}
+      className={mainLightness <= 40 ? 'dark-contrast' : 'light-contrast'}
     >
       {/* Because this intercepts touch events, we always want to have it visible. */}
       <div
