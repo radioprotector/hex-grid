@@ -17,7 +17,8 @@ function Cell(props: { hex: Hex<any> }): JSX.Element {
 
   // Scale hue along the cubic "q" dimension (upper-left to lower-right)
   const scaledHue = useMemo(() => {
-    return clamp(baseHue - (colorScaling.hue * (props.hex.q - centerCoordCube.q)), 0, 360);
+    // We *DON'T* want to clamp this value, unlike the others, because hue is cyclical
+    return baseHue - (colorScaling.hue * (props.hex.q - centerCoordCube.q));
   }, [baseHue, colorScaling, centerCoordCube, props.hex]);
 
   // Scale saturation along the cubic "s" dimension (up to down)
