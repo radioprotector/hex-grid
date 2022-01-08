@@ -24,6 +24,8 @@ Instead of using the traditional RGB color representation for traversal, [the HS
 
 To help indicate how various scrolling/panning actions will change the color values, a drag overlay, complete with icon, is displayed when the user begins a mouse/touch drag event. This also has the bonus effect of intercepting touch events on mobile devices that would otherwise cause undesired effects (such as pull-to-refresh or pinch-to-zoom). The icon for this is encapsulated within `DragGuideIcon` to allow for more dynamically-generated SVG content.
 
+The `ColorCycler` component is responsible for cycling color values on a periodic timer and providing UI to control this behavior.
+
 The `ColorChangeHandler` component is responsible for updating the application theme color and icon based on the currently-selected color.
 
 ## Audio Structure
@@ -32,13 +34,13 @@ The `SoundInterface` component provides the user-facing aspects of the audio beh
 
 The key audio sources for this structure are provided by oscillator "chains". Each chain consists of three separate oscillators, each with a different waveform type, and three corresponding gain nodes that allow for controlling which waveforms are heard for that chain. Furthermore, each chain ultimately terminates in a chain-specific gain node which allows for controlling how much that specific chain contributes to the overall mix.
 
-Three oscillator chains are set up. The first is tuned to the base frequency, the second is tuned to a major third of the base frequency (4 semitones), and the third is tuned to a perfect fifth of the base frequency (7 semitones). In addition, a sine-based LFO chain and reverb structure are applied to the combined result of these oscillator chains.
+Three oscillator chains are set up. The first is tuned to the root frequency, the second is by default tuned to a major third of the root frequency (4 semitones), and the third is by defaulttuned to a perfect fifth of the root frequency (7 semitones). In addition, a sine-based LFO chain and reverb structure are applied to the combined result of these oscillator chains.
 
 Various state properties control the output of the audio:
 
 - The **hue** of the color controls the relative gain levels of the waveforms.
-- The **saturation** of the color controls the gain levels of the major third and perfect fifth oscillator chains. (The gain level of the base frequency oscillator chain is not affected.)
-- The **lightness** of the color controls the base frequency used across all waveform oscillators.
+- The **saturation** of the color controls the gain levels of the third and fifth oscillator chains. (The gain level of the root frequency oscillator chain is not affected.)
+- The **lightness** of the color controls the root frequency used across all waveform oscillators.
 
 To resolve concerns with auto-play blocking (including those that arise from async/Promise-based click handlers), as much initialization code as possible is synchronous and on-demand. While oscillator wavetables are still loaded asynchronously, placeholder "raw" oscillator types are set when the oscillators are initialized. For the reverb convolver, which also requires asynchronously loading the impulse responses, the reverb intensity is started at 0.
 
