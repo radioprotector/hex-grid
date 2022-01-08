@@ -853,6 +853,9 @@ export class SoundManager {
       currentTime += REST_SEC;
     }
 
+    // Add an end-of-progression pause that's half of a chord
+    currentTime += this.chordDurationSeconds / 2;
+
     // Now update the marker to reflect the end of this chord progression
     this.nextChordProgressionEndTime = currentTime;
 
