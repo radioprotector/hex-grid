@@ -16,6 +16,8 @@ function SoundInterface(): JSX.Element {
   const [currentReverbIntensity, setCurrentReverbIntensity] = useState(0);
   const [currentLfoIntensity, setCurrentLfoIntensity] = useState(25);
   const [currentLfoFrequency, setCurrentLfoFrequency] = useState(15);
+  const [isChordProgressionEnabled, setChordProgressionEnabled] = useState(false);
+  const [currentChordDuration, setChordDuration] = useState(2.0);
 
   // Cascade color changes to the sound manager
   useEffect(() => {
@@ -84,6 +86,24 @@ function SoundInterface(): JSX.Element {
 
     setCurrentLfoFrequency(wholeFrequency)
     soundManager.current.changeLfoFrequency(wholeFrequency);
+  };
+
+  const chordButtonClicked = (event: React.MouseEvent<HTMLButtonElement>): boolean => {
+    const newStatus = !isChordProgressionEnabled;
+
+    setChordProgressionEnabled(newStatus);
+    soundManager.current.changeChordProgression(newStatus);
+
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  };
+
+  const chordDurationChanged = (event: React.FormEvent<HTMLInputElement>): void => {
+    const chordDuration = parseFloat((event.target as HTMLInputElement).value);
+
+    setChordDuration(chordDuration)
+    soundManager.current.changeChordDuration(chordDuration);
   };
 
   return (
@@ -186,6 +206,36 @@ function SoundInterface(): JSX.Element {
             step="1"
             value={currentLfoFrequency}
             onInput={lfoFrequencyChanged}
+          />
+        </div>
+        <div
+          className="settingBlock"
+        >
+          <button
+            type="button"
+            onClick={chordButtonClicked}
+          >
+            <svg
+              className="feather">
+              <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isChordProgressionEnabled) ? 'activity' : 'music')} />
+            </svg>
+            {isChordProgressionEnabled ? "Play Tones" : "Play Chords"}
+          </button>
+        </div>
+        <div
+          className="settingBlock"
+        >
+          <label htmlFor="audioChordDuration">
+            Chord Duration
+          </label>
+          <input
+            type="range"
+            id="audioChordDuration"
+            min="0.25"
+            max="10"
+            step="0.25"
+            value={currentChordDuration}
+            onInput={chordDurationChanged}
           />
         </div>
       </div>}

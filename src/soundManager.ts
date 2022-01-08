@@ -1,28 +1,13 @@
 import { scaleNumericValue, clamp } from './store';
 
-// enum Chord {
-//   Imaj,    // Major
-//   ii,   // Minor
-//   iii,  // Minor
-//   IV,   // Major
-//   V,    // Major
-//   vi,   // Minor
-//   viidim
-// }
-
-// const enum Triad {
-//   Major,
-//   Minor,
-//   Augmented,
-//   Diminished
-// }
-
 type TriadSemitones = [root: number, third: number, fifth: number];
 
 const MajorTriadSemitones: TriadSemitones = [0, 4, 7];
 const MinorTriadSemitones: TriadSemitones = [0, 3, 7];
 const AugmentedTriadSemitones: TriadSemitones = [0, 4, 8];
 const DiminishedTriadSemitones: TriadSemitones = [0, 3, 6];
+
+const DefaultSemitones: TriadSemitones = MajorTriadSemitones;
 
 type MajorScaleChords = 'I Maj' | 'II min' | 'III min' | 'IV Maj' | 'V Maj' | 'VI min' | 'VII dim';
 type MinorScaleChords = 'I min' | 'II dim' | 'bIII Aug' | 'IV min' | 'bVI Maj' | 'bVII Maj' | 'VII dim' | 'III Maj';
@@ -415,13 +400,20 @@ function assignWaveformFrequency(frequency: number, atTime: number, ...chains: (
  * Updates all oscillator nodes in the provided chains to use the specified detune value.
  * @param detune The detune amount to use, in cents of a semitone.
  * @param atTime The time at which to assign the detune value.
+ * @param cancel If true, will cancel other changes scheduled for the detune value.
  * @param chains The chains containing the oscillator nodes to update.
  */
-function assignWaveformDetune(detune: number, atTime: number, ...chains: (FrequencyOscillatorChain | null)[]): void {
+function assignWaveformDetune(detune: number, atTime: number, cancel: boolean, ...chains: (FrequencyOscillatorChain | null)[]): void {
   for (let chain of chains) {
     // Skip over nulls
     if (chain === null) {
       continue;
+    }
+
+    if (cancel) {
+      chain.oscillators.square.detune.cancelScheduledValues(atTime);
+      chain.oscillators.sawtooth.detune.cancelScheduledValues(atTime);
+      chain.oscillators.sine.detune.cancelScheduledValues(atTime);
     }
 
     chain.oscillators.square.detune.setValueAtTime(detune, atTime);
@@ -542,9 +534,19 @@ export class SoundManager {
   private overallVolumeGain: number = 0.1; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
   /**
+   * Whether or not chord progression is enabled.
+   */
+  public isChordProgressionEnabled: boolean = false; // XXX: See if this can be better consolidated with the SoundInterface UI default
+
+  /**
    * The time the next chord progression will end.
    */
-  private nextProgressionEndTime: number = 0;
+  private nextChordProgressionEndTime: number = 0;
+
+  /**
+   * The base duration of each chord in a progression, measured in seconds.
+   */
+  private chordDurationSeconds = 2; // XXX: See if this can be better consolidated with the SoundInterface UI default
 
   private initializeAudioStructure(): void {
     // Don't do this more than once
@@ -557,9 +559,9 @@ export class SoundManager {
     }
 
     // Set up the frequency chains
-    this.rootFrequencyChain = createOscillatorStructure(this.audioContext);
-    this.thirdFrequencyChain = createOscillatorStructure(this.audioContext, 4);
-    this.fifthFrequencyChain = createOscillatorStructure(this.audioContext, 7);
+    this.rootFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[0]);
+    this.thirdFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[1]);
+    this.fifthFrequencyChain = createOscillatorStructure(this.audioContext, DefaultSemitones[2]);
 
     // Create an overall mixer between the various frequency chains
     const chainsMixer = new ChannelMergerNode(this.audioContext, { numberOfInputs: 3, channelCount: 1 });
@@ -757,17 +759,31 @@ export class SoundManager {
       return;
     }
 
-    const LOOKAHEAD_SEC = 0.5;
-    const LOOKAHEAD_MS = 0.5 * 1000;
-    const CHORD_LENGTH_SEC = 1.6;
-    const CHORD_DECAY_SEC = CHORD_LENGTH_SEC / 4;
-    const REST_SEC = CHORD_LENGTH_SEC / 4;
+    // If chord progression is disabled, restore everything to "normal" and don't try to re-queue
+    if (!this.isChordProgressionEnabled) {
+      // Ensure we're not trying to decay/rest any notes.
+      this.startStopGainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+      this.startStopGainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
 
-    // See if there's anything we really want to bother with at this stage - if not,
-    // queue up a check later on
-    if (this.nextProgressionEndTime - LOOKAHEAD_SEC > this.audioContext.currentTime) {
-      setTimeout(() => { this.queueChordProgression(); }, LOOKAHEAD_MS);
+      // Assign the default semitones to all oscillator detunes and clear scheduled values.
+      assignWaveformDetune(DefaultSemitones[0] * 100, this.audioContext.currentTime, true, this.rootFrequencyChain);
+      assignWaveformDetune(DefaultSemitones[1] * 100, this.audioContext.currentTime, true, this.thirdFrequencyChain);
+      assignWaveformDetune(DefaultSemitones[2] * 100, this.audioContext.currentTime, true, this.fifthFrequencyChain);
 
+      return;
+    }
+
+    const LOOKAHEAD_SEC = 0.25;
+    const LOOKAHEAD_MS = LOOKAHEAD_SEC * 1000;
+    const CHORD_DECAY_SEC = this.chordDurationSeconds / 8;
+    const REST_SEC = this.chordDurationSeconds / 8;
+
+    // See if there's anything we really want to bother with at this stage -
+    // if not, queue up a check later on
+    if (this.nextChordProgressionEndTime - LOOKAHEAD_SEC > this.audioContext.currentTime) {
+      setTimeout(() => { 
+        this.queueChordProgression(); 
+      }, LOOKAHEAD_MS);
       return;
     }
 
@@ -775,11 +791,13 @@ export class SoundManager {
     let progressionIndex = Math.floor(Math.random() * AllProgressions.length);
     let progressionName = AllProgressions[progressionIndex];
     let chordsList = ChordProgressions[progressionName];
-    let currentTime = this.nextProgressionEndTime;
+    
+    // Determine the jumping-off point - unless we're super behind, this will be when the last chord ended.
+    let currentTime = Math.max(this.nextChordProgressionEndTime, this.audioContext.currentTime);
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.debug(`playing ${progressionName}`);
-    }
+    // if (process.env.NODE_ENV !== 'production') {
+    //   console.debug(`playing ${progressionName}`);
+    // }
 
     for(let chord of chordsList) {
       // First ensure that the start/stop gain is set to "start" at the beginning of this progression
@@ -787,41 +805,27 @@ export class SoundManager {
 
       // Pull the root semitones and the chord-specific tones
       const [rootSemitones, chordTones] = ChordTones[chord];
+      assignWaveformDetune((rootSemitones + chordTones[0]) * 100, currentTime, false, this.rootFrequencyChain);
+      assignWaveformDetune((rootSemitones + chordTones[1]) * 100, currentTime, false, this.thirdFrequencyChain);
+      assignWaveformDetune((rootSemitones + chordTones[2]) * 100, currentTime, false, this.fifthFrequencyChain);
 
-      // const centsPerSemitone = Math.pow(2, 1/12);
-      assignWaveformDetune((rootSemitones + chordTones[0]) * 100, currentTime, this.rootFrequencyChain);
-      assignWaveformDetune((rootSemitones + chordTones[1]) * 100, currentTime, this.thirdFrequencyChain);
-      assignWaveformDetune((rootSemitones + chordTones[2]) * 100, currentTime, this.fifthFrequencyChain);
-
-      // // Calculate the detune cents
-      // const sharedDetuneCents = Math.pow(2, rootSemitones/12) * 100;
-      // const rootDetuneCents = Math.pow(2, chordTones[0]/12) * 100;
-      // const thirdDetuneCents = Math.pow(2, chordTones[1]/12) * 100;
-      // const fifthDetuneCents = Math.pow(2, chordTones[2]/12) * 100;
-
-      // // Apply to the oscillator chains
-      // assignWaveformDetune(sharedDetuneCents + rootDetuneCents, currentTime, this.rootFrequencyChain);
-      // assignWaveformDetune(sharedDetuneCents + thirdDetuneCents, currentTime, this.thirdFrequencyChain);
-      // assignWaveformDetune(sharedDetuneCents + fifthDetuneCents, currentTime, this.fifthFrequencyChain);
-
-      // Increment the song length and decay the start/stop gain to "stop"
-      currentTime += CHORD_LENGTH_SEC;
+      // Now move forward the clock by the chord's duration, and then decay the start/stop gain to "stop"
+      currentTime += this.chordDurationSeconds;
       this.startStopGainNode.gain.setTargetAtTime(0, currentTime, CHORD_DECAY_SEC);
 
-      // Then advance past the decay and rest
+      // Then advance past the decay and rest time to get to the start of the next chord
       currentTime += CHORD_DECAY_SEC;
       currentTime += REST_SEC;
     }
 
-
     // Now update the marker to reflect the end of this chord progression
-    const chordDuration = currentTime - this.nextProgressionEndTime;
-    this.nextProgressionEndTime = currentTime;
+    const chordDuration = currentTime - this.nextChordProgressionEndTime;
+    this.nextChordProgressionEndTime = currentTime;
 
     // Queue up the next progression
     setTimeout(() => {
       this.queueChordProgression();
-    }, Math.max(LOOKAHEAD_MS, (1000 * chordDuration) - LOOKAHEAD_MS));
+    }, LOOKAHEAD_MS);
   }
 
   /**
@@ -943,5 +947,25 @@ export class SoundManager {
     }
 
     this.lfoChain.oscillator.frequency.setValueAtTime(this.lfoFrequency, this.audioContext.currentTime);
+  }
+
+  /**
+   * Changes whether automated chord progression is enabled.
+   * @param isEnabled Whether or not chord progression is enabled.
+   */
+  public changeChordProgression(isEnabled: boolean) {
+    // See if we're materially changing. If so, queue up further checks.
+    if (this.isChordProgressionEnabled !== isEnabled) {
+      this.isChordProgressionEnabled = isEnabled;
+      this.queueChordProgression();
+    }
+  }
+
+  /**
+   * Change the duration for further chords progression.
+   * @param durationSeconds The amount of time to spend on each chord, in seconds ranging from 0.25 to 10.
+   */
+  public changeChordDuration(durationSeconds: number) {
+    this.chordDurationSeconds = clamp(durationSeconds, 0.25, 10);
   }
 }
