@@ -152,12 +152,23 @@ function getStateForScreen(): HexGridState {
 
   const centerCoordCube = hexFactory(centerCoord).cube();
 
-  // Calculate the scaling factors
+  // Calculate the scaling factors based on the dimensions
   const colorScaling: ColorScaling = {
     hue: 6,
     lightness: 3,
     saturation: 4
   };
+
+  // Because hue and lightness are on diagonals, check against the number of rows *or* columns
+  if (cellRows <= 8 || cellColumns <= 8) {
+    colorScaling.hue *= 1.5;
+    colorScaling.lightness *= 1.5;
+  }
+  
+  // Because saturation is solely an up/down scale, check against the number of rows
+  if (cellRows <= 8) {
+    colorScaling.saturation *= 1.5;
+  }
 
   // Generate the state and log
   const state: HexGridState = {

@@ -12,6 +12,7 @@ import DebugDialog from "./DebugDialog";
 function App(): JSX.Element {
   const dispatch = useAppDispatch();
   const baseHexSize = useAppSelector((state) => state.hexGrid.baseHexSize);
+  const colorScaling = useAppSelector((state)  => state.hexGrid.colorScaling);
   const [isPanning, setIsPanning] = useState(false);
   const lastPannedClientX = useRef(0);
   const lastPannedClientY = useRef(0);
@@ -173,8 +174,7 @@ function App(): JSX.Element {
       }
   
       // Determine the distance between the click and our "last panned" value.
-      // If it's larger than our base hex size, we want to shift one of the colors
-      const scaleFactor = isTouchEvent ? 10 : 5;
+      // If it's larger than our base hex size, we want to shift one of the color component
       const distanceX = currentClientX - lastPannedClientX.current;
       const distanceY = currentClientY - lastPannedClientY.current;
       const distanceTotal = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
@@ -196,27 +196,27 @@ function App(): JSX.Element {
         // Now map the different axes (assuming 6 "chunks")
         if (angle <= 60) {
           // Right and up - adjust lightness upward
-          dispatch({ type: 'color/adjustLightness', payload: scaleFactor });
+          dispatch({ type: 'color/adjustLightness', payload: colorScaling.lightness });
         }
         else if (angle <= 120) {
           // Straight up - adjust saturation upward
-          dispatch({ type: 'color/adjustSaturation', payload: scaleFactor });
+          dispatch({ type: 'color/adjustSaturation', payload: colorScaling.saturation });
         }
         else if (angle <= 180) {
-          // Left and up - adjust hue (but double the scaling factor since hue is a larger range than the percentages)
-          dispatch({ type: 'color/adjustHue', payload: scaleFactor * 2 });
+          // Left and up - adjust hue
+          dispatch({ type: 'color/adjustHue', payload: colorScaling.hue });
         }
         else if (angle <= 240) {
           // Left and down - adjust lightness downward
-          dispatch({ type: 'color/adjustLightness', payload: -scaleFactor });
+          dispatch({ type: 'color/adjustLightness', payload: -colorScaling.lightness });
         }
         else if (angle <= 300) {
           // Straight down - adjust saturation downward
-          dispatch({ type: 'color/adjustSaturation', payload: -scaleFactor });
+          dispatch({ type: 'color/adjustSaturation', payload: -colorScaling.saturation });
         }
         else {
-          // Right and down - adjust hue (but double the scaling factor since hue is a larger range than the percentages)
-          dispatch({ type: 'color/adjustHue', payload: -scaleFactor * 2 });
+          // Right and down - adjust hue
+          dispatch({ type: 'color/adjustHue', payload: -colorScaling.hue });
         }
   
         // Update our "last panned" value
@@ -242,7 +242,7 @@ function App(): JSX.Element {
       window.removeEventListener('touchmove', handlePanMove);
       window.removeEventListener('mousemove', handlePanMove);
     }
-  }, [dispatch, baseHexSize, isPanning]);
+  }, [dispatch, baseHexSize, isPanning, colorScaling]);
 
   // Add an effect to handle when we want to stop panning
   useEffect(() => {
