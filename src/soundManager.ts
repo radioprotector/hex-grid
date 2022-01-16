@@ -500,8 +500,12 @@ function assignWaveformGains(square: number, sawtooth: number, sine: number, atT
  * @param atTime The time at which to assign the gain levels.
  */
 function setWetDryBalance(wetNode: GainNode, dryNode: GainNode, wetGain: number, atTime: number) {
-  wetNode.gain.setValueAtTime(wetGain, atTime);
-  dryNode.gain.setValueAtTime(1.0 - wetGain, atTime);
+  // Use an equal-power crossfade:
+  // https://www.html5rocks.com/en/tutorials/webaudio/intro/#toc-xfade-ep
+  const HALF_PI = 0.5 * Math.PI;
+
+  wetNode.gain.setValueAtTime(wetGain * HALF_PI, atTime);
+  dryNode.gain.setValueAtTime((1.0 - wetGain) * HALF_PI, atTime);
 }
 
 /**
