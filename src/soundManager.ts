@@ -866,7 +866,7 @@ export class SoundManager {
     const LOOKAHEAD_SEC = 0.25;
     const LOOKAHEAD_MS = LOOKAHEAD_SEC * 1000;
     const CHORD_DECAY_SEC = this.chordDurationSeconds / 8;
-    const REST_SEC = this.chordDurationSeconds / 16;
+    const REST_SEC = 0; // = this.chordDurationSeconds / 32;
 
     // See if there's anything we really want to bother with at this stage -
     // if not, queue up a check later on
@@ -914,8 +914,8 @@ export class SoundManager {
       currentTime += REST_SEC;
     }
 
-    // Add an end-of-progression pause that's half of a chord
-    currentTime += this.chordDurationSeconds / 2;
+    // Add an end-of-progression pause
+    currentTime += this.chordDurationSeconds / 8;
 
     // Now update the marker to reflect the end of this chord progression
     this.nextChordProgressionEndTime = currentTime;
