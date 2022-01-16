@@ -218,7 +218,7 @@ function SoundInterface(): JSX.Element {
               className="feather">
               <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isChordProgressionEnabled) ? 'activity' : 'music')} />
             </svg>
-            {isChordProgressionEnabled ? "Play Tones" : "Play Chords"}
+            {isChordProgressionEnabled ? "Steady Tones" : "Chords"}
           </button>
         </div>
         <div
