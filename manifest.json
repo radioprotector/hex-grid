@@ -1,6 +1,6 @@
 {
   "short_name": "hex-grid",
-  "name": "hex-grid",
+  "name": "hex-grid - a browser-based color scroller",
   "icons": [
     {
       "src": "favicon.ico",
