@@ -664,7 +664,7 @@ export class SoundManager {
     this.structureInitialized = true;
 
     // Switch oscillators over to use wavetables
-    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_08_Warm_Square')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_08_Warm_Square.json')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'square', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
@@ -673,7 +673,7 @@ export class SoundManager {
         console.error('error retrieving square wavetable', reason);
       });
 
-    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_06_Warm_Saw')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_06_Warm_Saw.json')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'sawtooth', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
@@ -682,7 +682,7 @@ export class SoundManager {
         console.error('error retrieving saw wavetable', reason);
       });
 
-    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_Celeste')
+    fetch(process.env.PUBLIC_URL + '/assets/google/wavetable_Celeste.json')
       .then((response) => response.json())
       .then((tableJson) => {
         assignWaveformTable(this.audioContext, tableJson, 'sine', this.rootFrequencyChain, this.thirdFrequencyChain, this.fifthFrequencyChain, this.seventhFrequencyChain);
