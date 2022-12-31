@@ -18,3 +18,21 @@
 #audioPanel button {
   min-width: 40%;
 }
+
+/*
+  Make a fake text stroke on each label's text to make it pop more easily.
+  Using a middle-of-the-road value like #777 instead of customizing it for light/dark contrast variants
+  yields most of the benefit while not being overly distracting when it's ultimately unnecessary. 
+*/
+/* .dark-contrast #audioPanel label {
+  text-shadow: 0.5px 0.5px black, -0.5px 0.5px black, 0.5px -0.5px black, -0.5px -0.5px black;
+}
+
+.light-contrast #audioPanel label {
+  text-shadow: 0.5px 0.5px white, -0.5px 0.5px white, 0.5px -0.5px white, -0.5px -0.5px white;
+} */
+
+#audioPanel label {
+  /* text-shadow: 0.5px 0.5px #777, -0.5px 0.5px #777, 0.5px -0.5px #777, -0.5px -0.5px #777; */
+  text-shadow: 0.5px 0.5px 1px #777, -0.5px 0.5px 1px #777, 0.5px -0.5px 1px #777, -0.5px -0.5px 1px #777;
+}
