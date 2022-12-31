@@ -216,9 +216,9 @@ function SoundInterface(): JSX.Element {
           >
             <svg
               className="feather">
-              <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isChordProgressionEnabled) ? 'activity' : 'music')} />
+              <use href={process.env.PUBLIC_URL + '/assets/feather/feather-sprite.svg#' + ((isChordProgressionEnabled) ? 'music' : 'activity')} />
             </svg>
-            {isChordProgressionEnabled ? "Steady Tones" : "Chords"}
+            {isChordProgressionEnabled ? "Chords" : "Steady Tones"}
           </button>
         </div>
         <div
@@ -233,6 +233,7 @@ function SoundInterface(): JSX.Element {
             min="0.25"
             max="10"
             step="0.25"
+            disabled={!isChordProgressionEnabled}
             value={currentChordDuration}
             onInput={chordDurationChanged}
           />
