@@ -28,6 +28,20 @@ The `ColorCycler` component is responsible for cycling color values on a periodi
 
 The `ColorChangeHandler` component is responsible for updating the application theme color and icon based on the currently-selected color.
 
+### Keyboard Shortcuts
+
+The following keyboard shortcuts are supported:
+
+- **Hue**
+  - Increase: `→` or `Numpad 6`
+  - Decrease: `←` or `Numpad 4`
+- **Saturation**
+  - Increase: `↑` or `Numpad 8`
+  - Decrease: `↓` or `Numpad 2`
+- **Lightness**
+  - Increase: `+` or `Numpad +`
+  - Decrease: `-` or `Numpad -`
+
 ## Audio Structure
 
 The `SoundInterface` component provides the user-facing aspects of the audio behavior, but the `soundManager` class encapsulates all of the direct interaction with the Web Audio API. The overall chain created by this class is described in [the audio.dot Graphviz file](audio.dot). 
